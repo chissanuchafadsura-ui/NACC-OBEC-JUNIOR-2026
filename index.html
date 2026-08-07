@@ -521,7 +521,7 @@
 
   <script>
     const SUPABASE_URL = 'https://fsyqijfwjdgembmfkfwy.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzeXFpamZ3amRnZW1ibWZrZnd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMjIzNzEsImV4cCI6MjEwMTU5ODM3MX0.2qH_fzZT-5SFUkzLk6qh74N2S5BH9np01ucMC0eizBg';
+    const SUPABASE_KEY = 'sb_publishable_4HzhTgG5X5rLAZJ9h7i-fA_vJd6-iZZ';
     
     let supabaseClient = null;
     let currentLoginInfo = null;
@@ -668,14 +668,14 @@
         const result = await fetchUserRow(email);
 
         if (result && result.error) {
-          alert(`⚠️ ไม่สามารถดึงข้อมูลจากตาราง login ได้:\n${result.error.message}`);
+          alert(`⚠️ ไม่พบ E - mail ของท่าน ${result.error.message}`);
           return;
         }
 
         const data = result ? result.data : null;
 
         if (!data) {
-          alert(`❌ ไม่พบอีเมล "${email}" ในตาราง 'login'!\n\nกรุณาตรวจสอบว่าใส่อีเมลตรงกับที่บันทึกไว้ในตาราง 'login' หรือไม่`);
+          alert(`❌ ไม่พบอีเมล "${email}" ในฐานข้อมูล`);
           return;
         }
 
