@@ -1,984 +1,532 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบคัดเลือกอนุกรรมการ ป.ป.ช.สพฐ.น้อย ปีการศึกษา 2569</title>
-  
-  <!-- Favicon -->
-  <link rel="shortcut icon" href="https://score.phukhieo.ac.th/helper/img/pklogo.png" type="image/x-icon">
-  
-  <!-- Font Prompt -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Supabase JS Client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://score.phukhieo.ac.th/helper/img/pklogo.png">
+    <title>ระบบคัดเลือกอนุกรรมการ ป.ป.ช.สพฐ.น้อย ปีการศึกษา 2569</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <style>
-    :root {
-      --primary-purple: #4A154B;
-      --secondary-purple: #6B2D5C;
-      --gold-accent: #D4AF37;
-      --gold-hover: #B8860B;
-      --light-bg: #F8F9FA;
-      --text-dark: #2C3E50;
-      --text-muted: #6C757D;
-      --border-color: #E2E8F0;
-      --selected-green: #2ECC71;
-    }
+    <style>
+        :root {
+            --purple: #5c2d91;
+            --gold: #d4af37;
+            --bg-color: #ffffff;
+            --text-main: #333333;
+            --green-select: #28a745;
+        }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Prompt', sans-serif;
-    }
+        body {
+            font-family: 'Sarabun', Tahoma, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
-    body {
-      background-color: var(--light-bg);
-      color: var(--text-dark);
-      font-size: 15px;
-      line-height: 1.6;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+            border-bottom: 2px solid var(--gold);
+        }
 
-    .container {
-      width: 100%;
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 20px;
-      flex: 1;
-    }
+        .logos {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
 
-    header {
-      text-align: center;
-      padding: 25px 15px;
-      background: #FFFFFF;
-      color: var(--primary-purple);
-      border-radius: 16px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-      margin-bottom: 25px;
-      border-bottom: 4px solid var(--gold-accent);
-      border-top: 1px solid var(--border-color);
-    }
+        .logos img {
+            height: 70px;
+            object-fit: contain;
+            /* ไฮไลท์ฟุ้งสีขาวบางๆ 50% ไม่มีขอบ */
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+        }
 
-    .logo-group {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 18px;
-      padding: 10px;
-    }
+        h1 {
+            color: var(--purple);
+            font-size: 1.5rem;
+            margin: 5px 0;
+        }
 
-    .logo-group img {
-      height: 65px;
-      width: auto;
-      object-fit: contain;
-      border: none !important;
-      outline: none !important;
-      filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.8)) drop-shadow(0 2px 4px rgba(0,0,0,0.08));
-      transition: transform 0.3s ease;
-    }
+        h2 {
+            color: var(--gold);
+            font-size: 1.2rem;
+            margin: 0;
+            font-weight: normal;
+        }
 
-    .logo-group img:hover {
-      transform: scale(1.08);
-    }
+        .container {
+            flex: 1;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
 
-    header h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--primary-purple);
-      margin-bottom: 6px;
-    }
+        /* Views */
+        #dashboard-view, #login-view, #register-view {
+            display: none;
+        }
 
-    header h2 {
-      font-size: 1.1rem;
-      font-weight: 500;
-      color: var(--gold-hover);
-    }
+        .active-view {
+            display: block !important;
+        }
 
-    .card-panel {
-      background: #FFFFFF;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-      margin-bottom: 25px;
-      border: 1px solid var(--border-color);
-    }
+        /* Buttons */
+        .btn {
+            background-color: var(--purple);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+        .btn:hover { background-color: #4a2475; }
+        .btn-gold { background-color: var(--gold); color: #333; }
+        .btn-gold:hover { background-color: #b5952f; }
 
-    .btn-login {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      max-width: 500px;
-      margin: 10px auto;
-      padding: 14px 28px;
-      background: linear-gradient(135deg, var(--gold-accent), var(--gold-hover));
-      color: #FFFFFF;
-      font-size: 1rem;
-      font-weight: 600;
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.35);
-      transition: all 0.3s ease;
-      text-align: center;
-    }
+        /* Login Form */
+        .login-box {
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .login-box input {
+            width: 90%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
 
-    .btn-login:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(212, 175, 55, 0.45);
-    }
+        /* Student Cards */
+        .student-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
 
-    .user-info {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      align-items: center;
-      justify-content: space-between;
-      padding-bottom: 15px;
-      border-bottom: 1px dashed var(--border-color);
-      margin-bottom: 20px;
-    }
+        .student-card {
+            display: flex;
+            border: 2px solid #eee;
+            border-radius: 15px;
+            padding: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
 
-    .user-info p {
-      font-size: 1rem;
-      font-weight: 500;
-    }
+        .student-card.selected {
+            border-color: var(--green-select);
+            background-color: #f4fff4;
+        }
 
-    .user-info span {
-      color: var(--primary-purple);
-      font-weight: 700;
-    }
+        .student-photo {
+            width: 80px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-right: 15px;
+            background-color: #f0f0f0;
+        }
 
-    .class-filter-select {
-      padding: 6px 12px;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-      font-size: 0.95rem;
-      color: var(--primary-purple);
-      font-weight: 600;
-      background: #F8F9FA;
-    }
+        .student-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
 
-    .students-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-      gap: 16px;
-      margin-top: 15px;
-    }
+        .student-info input[type="tel"] {
+            margin-top: 5px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            display: none;
+        }
+        
+        .student-card.selected input[type="tel"] {
+            display: block;
+        }
 
-    .student-card {
-      display: flex;
-      align-items: center;
-      background: #FFFFFF;
-      border: 2px solid var(--border-color);
-      border-radius: 12px;
-      padding: 12px;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      user-select: none;
-      position: relative;
-    }
+        /* Table */
+        .regis-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        .regis-table th, .regis-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .regis-table th {
+            background-color: var(--purple);
+            color: white;
+        }
+        .regis-table .teacher-name {
+            font-size: 0.75rem;
+            color: #666;
+        }
 
-    .student-card:hover {
-      border-color: #CBD5E1;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-
-    .student-card.selected {
-      border-color: var(--selected-green) !important;
-      background-color: #F0FDF4;
-      box-shadow: 0 0 12px rgba(46, 204, 113, 0.25);
-    }
-
-    .student-photo {
-      width: 70px;
-      height: 85px;
-      object-fit: cover;
-      border-radius: 8px;
-      margin-right: 12px;
-      background-color: #E2E8F0;
-      flex-shrink: 0;
-      border: 1px solid var(--border-color);
-    }
-
-    .student-details {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      font-size: 0.9rem;
-    }
-
-    .student-details .name {
-      font-weight: 600;
-      color: var(--primary-purple);
-      font-size: 0.95rem;
-    }
-
-    .tel-input {
-      margin-top: 6px;
-      width: 100%;
-      padding: 6px 10px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      font-size: 0.85rem;
-      outline: none;
-    }
-
-    .tel-input:focus {
-      border-color: var(--selected-green);
-    }
-
-    .btn-submit {
-      margin-top: 20px;
-      padding: 12px 30px;
-      background: var(--primary-purple);
-      color: white;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-      width: 100%;
-      transition: background 0.3s ease;
-    }
-
-    .btn-submit:hover {
-      background: var(--secondary-purple);
-    }
-
-    .btn-submit:disabled {
-      background: var(--text-muted);
-      cursor: not-allowed;
-      opacity: 0.7;
-    }
-
-    .table-container {
-      overflow-x: auto;
-      margin-top: 15px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 10px 14px;
-      text-align: left;
-      border-bottom: 1px solid var(--border-color);
-      font-size: 0.9rem;
-    }
-
-    th {
-      background-color: var(--primary-purple);
-      color: white;
-      font-weight: 500;
-    }
-
-    tr:hover {
-      background-color: #F8FAFC;
-    }
-
-    .class-header-row {
-      background-color: #F3E8F4;
-      font-weight: 600;
-      color: var(--primary-purple);
-    }
-
-    .teacher-small {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .alert-box {
-      padding: 12px 16px;
-      border-radius: 8px;
-      background-color: #FEF3C7;
-      color: #92400E;
-      font-size: 0.9rem;
-      margin-bottom: 15px;
-      display: none;
-      border: 1px solid #FCD34D;
-    }
-
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.55);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      padding: 20px;
-      backdrop-filter: blur(3px);
-    }
-
-    .modal-card {
-      background: white;
-      border-radius: 16px;
-      padding: 28px 24px;
-      width: 100%;
-      max-width: 440px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      text-align: center;
-    }
-
-    .modal-card h3 {
-      color: var(--primary-purple);
-      font-size: 1.2rem;
-      margin-bottom: 8px;
-    }
-
-    .modal-card p {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      margin-bottom: 20px;
-    }
-
-    .email-input-group {
-      text-align: left;
-    }
-
-    .email-input-group label {
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--text-dark);
-    }
-
-    .email-input-group input {
-      width: 100%;
-      padding: 10px 12px;
-      margin-top: 5px;
-      margin-bottom: 15px;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      font-size: 0.95rem;
-      outline: none;
-    }
-
-    .email-input-group input:focus {
-      border-color: var(--primary-purple);
-    }
-
-    .modal-btns {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-    }
-
-    .btn-secondary {
-      padding: 9px 18px;
-      background: #E2E8F0;
-      color: var(--text-dark);
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-    }
-
-    .btn-primary {
-      padding: 9px 18px;
-      background: var(--primary-purple);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-    }
-
-    footer {
-      text-align: center;
-      padding: 20px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-top: auto;
-      border-top: 1px solid var(--border-color);
-      background: #FFFFFF;
-    }
-
-    footer a {
-      color: var(--primary-purple);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    footer a:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 600px) {
-      header h1 { font-size: 1.1rem; }
-      header h2 { font-size: 0.9rem; }
-      .logo-group img { height: 48px; }
-      .students-grid { grid-template-columns: 1fr; }
-    }
-  </style>
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            font-size: 0.85rem;
+            color: #555;
+            border-top: 1px solid #eee;
+        }
+        .footer a {
+            color: var(--purple);
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="container">
-    <header>
-      <div class="logo-group">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Emblem_of_the_National_Anti-Corruption_Commission_Thailand.svg/960px-Emblem_of_the_National_Anti-Corruption_Commission_Thailand.svg.png" alt="ตรา ป.ป.ช.">
-        <img src="https://www.kruchiangrai.net/wp-content/uploads/2024/02/%E0%B8%AA%E0%B8%9E%E0%B8%90.1-%E0%B8%82%E0%B8%AD%E0%B8%9A%E0%B8%82%E0%B8%B2%E0%B8%A7.webp" alt="ตรา สพฐ.">
-        <img src="https://score.phukhieo.ac.th/helper/img/pklogo.png" alt="ตรา โรงเรียนภูเขียว">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmp0eh7_RSBKmHvK2EDeUUJRYIxCXHjYZNr2MDSJr0KSTBWauKtC8aFUnd&s=10" alt="ตราสัญลักษณ์ 1">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRyqP5dd2_-JXf02g8wFMy11ShZ5rEFvWlN315F4fu-u15imn4c3bOwvo&s=10" alt="ตราสัญลักษณ์ 2">
-      </div>
-      <h1>ระบบคัดเลือกอนุกรรมการ ป.ป.ช.สพฐ.น้อย ปีการศึกษา 2569</h1>
-      <h2>โรงเรียนภูเขียว สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาชัยภูมิ</h2>
-    </header>
+    <div class="header">
+        <div class="logos">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Emblem_of_the_National_Anti-Corruption_Commission_Thailand.svg/960px-Emblem_of_the_National_Anti-Corruption_Commission_Thailand.svg.png" alt="NACC Logo">
+            <img src="https://www.kruchiangrai.net/wp-content/uploads/2024/02/%E0%B8%AA%E0%B8%9E%E0%B8%90.1-%E0%B8%82%E0%B8%AD%E0%B8%9A%E0%B8%82%E0%B8%B2%E0%B8%A7.webp" alt="OBEC Logo">
+            <img src="https://score.phukhieo.ac.th/helper/img/pklogo.png" alt="PK Logo">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmp0eh7_RSBKmHvK2EDeUUJRYIxCXHjYZNr2MDSJr0KSTBWauKtC8aFUnd&s=10" alt="Logo 4">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRyqP5dd2_-JXf02g8wFMy11ShZ5rEFvWlN315F4fu-u15imn4c3bOwvo&s=10" alt="Logo 5">
+        </div>
+        <h1>ระบบคัดเลือกอนุกรรมการ ป.ป.ช.สพฐ.น้อย ปีการศึกษา 2569</h1>
+        <h2>โรงเรียนภูเขียว สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาชัยภูมิ</h2>
+    </div>
 
-    <div class="card-panel">
-      <!-- ส่วนหน้าก่อนล็อกอิน -->
-      <div id="loginSection" style="text-align: center; padding: 15px 0;">
-        <button id="btnLogin" class="btn-login" onclick="openLoginModal()">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C6.721,2,2,6.721,2,12.545S6.721,23.09,12.545,23.09c6.301,0,10.455-4.432,10.455-10.637c0-0.781-0.078-1.536-0.218-2.214H12.545z"/>
-          </svg>
-          เข้าสู่ระบบ (เพื่อส่งข้อมูลอนุกรรมการ ป.ป.ช.สพฐ.น้อย)
-        </button>
-      </div>
-
-      <!-- ส่วนหน้าหลังล็อกอิน -->
-      <div id="appSection" style="display: none;">
-        <div class="user-info">
-          <p>ชื่อผู้กรอกข้อมูล : <span id="teacherName">-</span></p>
-          <p>ระดับชั้น : <span id="teacherClassDisplay">-</span></p>
-          <button style="padding: 6px 12px; font-size: 0.85rem; background:#E53E3E; color:white; border:none; border-radius:6px; cursor:pointer;" onclick="logout()">ออกจากระบบ</button>
+    <div class="container">
+        
+        <div id="dashboard-view" class="active-view">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <button class="btn" onclick="showView('login-view')">เข้าสู่ระบบ (เพื่อส่งข้อมูลอนุกรรมการ ป.ป.ช.สพฐ.น้อย)</button>
+            </div>
+            
+            <h3 style="color: var(--purple);">สถานะการลงทะเบียน</h3>
+            <div style="overflow-x: auto;">
+                <table class="regis-table" id="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>ระดับชั้น</th>
+                            <th>เลขที่</th>
+                            <th>รหัสนักเรียน</th>
+                            <th>ชื่อ - สกุล</th>
+                            <th>ผู้ส่งข้อมูล</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
         </div>
 
-        <div id="statusAlert" class="alert-box"></div>
-
-        <div id="selectionFormArea">
-          <p style="font-weight: 500; margin-bottom: 10px;">กรุณาคลิกเลือกนักเรียนจำนวน <b style="color: var(--primary-purple);">2 คน</b> เพื่อแต่งตั้งเป็นอนุกรรมการฯ พร้อมกรอกเบอร์โทรศัพท์ (10 หลัก):</p>
-          
-          <div class="students-grid" id="studentsGrid"></div>
-
-          <button id="btnSubmit" class="btn-submit" onclick="submitSelection()" disabled>บันทึกข้อมูลอนุกรรมการ (เลือกแล้ว 0/2 คน)</button>
+        <div id="login-view">
+            <div class="login-box">
+                <h3 style="color: var(--purple);">เข้าสู่ระบบ</h3>
+                <input type="email" id="login-email" placeholder="ระบุ E-mail ของโรงเรียน">
+                <button class="btn btn-gold" onclick="login()">ตรวจสอบข้อมูล</button>
+                <br><br>
+                <button class="btn" style="background:#888; font-size: 0.8rem;" onclick="showView('dashboard-view')">กลับหน้าแรก</button>
+            </div>
         </div>
-      </div>
+
+        <div id="register-view">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+                <div>
+                    <strong>ผู้กรอกข้อมูล:</strong> <span id="display-teacher"></span> <br>
+                    <strong>ระดับชั้น:</strong> <span id="display-class"></span>
+                </div>
+                <button class="btn btn-gold" onclick="submitRegistration()">บันทึกข้อมูล</button>
+            </div>
+
+            <div id="admin-filter" style="display: none; margin-top: 15px;">
+                <label><strong>เลือกห้องเพื่อดูข้อมูล: </strong></label>
+                <select id="class-filter" onchange="loadStudentsForClass(this.value)">
+                    <option value="">-- เลือกห้องเรียน --</option>
+                    </select>
+            </div>
+
+            <p style="color: #d9534f; font-size: 0.9rem; margin-top: 15px;">* กรุณาคลิกเลือกนักเรียน 2 คน (หากต้องการเปลี่ยนคน สามารถคลิกเลือกคนใหม่ได้เลย)</p>
+            
+            <div class="student-grid" id="student-container">
+                </div>
+        </div>
+
     </div>
 
-    <!-- สรุปข้อมูล -->
-    <div class="card-panel">
-      <h3 style="color: var(--primary-purple); margin-bottom: 12px; font-size: 1.1rem; border-left: 4px solid var(--gold-accent); padding-left: 10px;">สรุปการลงทะเบียนอนุกรรมการฯ แต่ละระดับชั้น</h3>
-      <div class="table-container">
-        <table id="regisTable">
-          <thead>
-            <tr>
-              <th style="width: 10%;">เลขที่</th>
-              <th style="width: 25%;">รหัสนักเรียน</th>
-              <th style="width: 40%;">ชื่อ – สกุล</th>
-              <th style="width: 25%;">ผู้ส่งข้อมูล</th>
-            </tr>
-          </thead>
-          <tbody id="regisTableBody">
-            <tr><td colspan="4" style="text-align:center;">กำลังโหลดข้อมูล...</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="footer">
+        © AnuNACC – OBEC - JUNIOR REGIS 2026 ALLRIGHT RESERVED<br>
+        <a href="https://www.instagram.com/big_chissanucha_pk?igsh=MWNvZGJydTk1cGJh" target="_blank">Dev_Chissanucha Fadsura</a>
     </div>
 
-  </div>
+    <script>
+        // ================= Supabase Config =================
+        const SUPABASE_URL = 'https://fsyqijfwjdgembmfkfwy.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_4HzhTgG5X5rLAZJ9h7i-fA_vJd6-iZZ';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  <!-- Modal ล็อกอินด้วยอีเมล -->
-  <div id="loginModal" class="modal-overlay">
-    <div class="modal-card">
-      <h3>เข้าสู่ระบบ</h3>
-      <p>กรุณาระบุ Google E-mail โรงเรียนเพื่อเข้าสู่ระบบ</p>
+        // ================= Global Variables =================
+        let currentUser = null;
+        let selectedStudents = [];
+        let currentStudentsData = [];
 
-      <div class="email-input-group">
-        <label for="modalEmailInput">Google E-mail โรงเรียน:</label>
-        <input type="email" id="modalEmailInput" placeholder="เช่น pinthong.s@phukhieo.ac.th" onkeyup="if(event.key==='Enter') submitEmailLogin()">
-      </div>
-
-      <div class="modal-btns">
-        <button class="btn-secondary" onclick="closeLoginModal()">ยกเลิก</button>
-        <button id="btnSubmitEmail" class="btn-primary" onclick="submitEmailLogin()">เข้าสู่ระบบ</button>
-      </div>
-    </div>
-  </div>
-
-  <footer>
-    <p>© AnuNACC – OBEC - JUNIOR REGIS 2026 ALLRIGHT RESERVED</p>
-    <p><a href="https://www.instagram.com/big_chissanucha_pk?igsh=MWNvZGJydTk1cGJh" target="_blank" rel="noopener noreferrer">Dev_Chissanucha Fadsura</a></p>
-  </footer>
-
-  <script>
-    const SUPABASE_URL = 'https://fsyqijfwjdgembmfkfwy.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_4HzhTgG5X5rLAZJ9h7i-fA_vJd6-iZZ';
-    
-    let supabaseClient = null;
-    let currentLoginInfo = null;
-    let selectedStudents = []; 
-    let currentClassStudents = [];
-    let isAdmin = false;
-    let targetClass = '';
-
-    window.addEventListener('DOMContentLoaded', async () => {
-      try {
-        if (window.supabase && typeof window.supabase.createClient === 'function') {
-          supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        } else {
-          console.error("Supabase CDN script fail.");
-        }
-        
-        await checkAuthSession();
-        if (supabaseClient) {
-           await loadRegisSummary();
-        }
-      } catch (err) {
-        console.error("Initialization error:", err);
-      }
-    });
-
-    function openLoginModal() {
-      try {
-        document.getElementById('loginModal').style.display = 'flex';
-        setTimeout(() => {
-          document.getElementById('modalEmailInput').focus();
-        }, 100);
-      } catch (e) {
-        alert("ไม่สามารถเปิดหน้าต่างเข้าสู่ระบบได้ โปรดรีเฟรชหน้าเว็บ (F5)");
-      }
-    }
-
-    function closeLoginModal() {
-      document.getElementById('loginModal').style.display = 'none';
-    }
-
-    // Helper function to extract field value dynamically regardless of column casing or special characters
-    function getRowField(row, possibleKeys) {
-      if (!row) return '';
-      for (const k of possibleKeys) {
-        if (row[k] !== undefined && row[k] !== null) return String(row[k]);
-      }
-      const rowKeys = Object.keys(row);
-      for (const pk of possibleKeys) {
-        const foundKey = rowKeys.find(rk => rk.trim().toLowerCase() === pk.trim().toLowerCase());
-        if (foundKey && row[foundKey] !== undefined && row[foundKey] !== null) {
-          return String(row[foundKey]);
-        }
-      }
-      return '';
-    }
-
-    async function submitEmailLogin() {
-      if (!supabaseClient) return alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
-      const email = document.getElementById('modalEmailInput').value.trim();
-      if (!email) {
-        alert('กรุณากรอกอีเมลก่อนกดเข้าสู่ระบบ');
-        return;
-      }
-      
-      const btn = document.getElementById('btnSubmitEmail');
-      btn.innerText = "กำลังตรวจสอบ...";
-      btn.disabled = true;
-
-      await processUserByEmail(email);
-
-      btn.innerText = "เข้าสู่ระบบ";
-      btn.disabled = false;
-    }
-
-    async function logout() {
-      try { localStorage.removeItem('user_email_session'); } catch(e){}
-      if (supabaseClient) {
-        try { await supabaseClient.auth.signOut(); } catch(e){}
-      }
-      window.location.reload();
-    }
-
-    async function checkAuthSession() {
-      let activeEmail = null;
-
-      try {
-        activeEmail = localStorage.getItem('user_email_session');
-      } catch(e) { console.warn("LocalStorage not available:", e); }
-
-      if (activeEmail && supabaseClient) {
-        await processUserByEmail(activeEmail);
-      } else {
-        document.getElementById('loginSection').style.display = 'block';
-        document.getElementById('appSection').style.display = 'none';
-      }
-    }
-
-    // Function to search user from "login" table safely with pagination bypass
-    async function fetchUserRow(email) {
-      if (!supabaseClient) return null;
-
-      const cleanEmail = email.trim().toLowerCase();
-
-      try {
-        // ดึงข้อมูลทั้งหมดมาเลย เพื่อหลีกเลี่ยงปัญหา API ไม่รองรับคอลัมน์เว้นวรรค "E - mail"
-        let { data: allUsers, error } = await supabaseClient
-          .from('login')
-          .select('*')
-          .range(0, 5000);
-
-        if (error || !allUsers || allUsers.length === 0) {
-          const res2 = await supabaseClient.from('Login').select('*').range(0, 5000);
-          if (res2.data && res2.data.length > 0) {
-            allUsers = res2.data;
-            error = null;
-          }
+        // ================= Utility =================
+        function showView(viewId) {
+            document.querySelectorAll('.container > div').forEach(div => div.classList.remove('active-view'));
+            document.getElementById(viewId).classList.add('active-view');
+            if (viewId === 'dashboard-view') loadDashboardData();
         }
 
-        if (error) {
-          console.error("Login Query Error:", error);
-          return { error };
+        // ================= Dashboard =================
+        async function loadDashboardData() {
+            const { data, error } = await supabase
+                .from('regis')
+                .select('*')
+                .order('Class', { ascending: true })
+                .order('No.', { ascending: true });
+
+            if (error) {
+                console.error("Error loading dashboard:", error);
+                return;
+            }
+
+            const tbody = document.querySelector('#dashboard-table tbody');
+            tbody.innerHTML = '';
+            
+            if(data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">ยังไม่มีข้อมูลการลงทะเบียน</td></tr>';
+                return;
+            }
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row['Class'] || '-'}</td>
+                    <td>${row['No.'] || '-'}</td>
+                    <td>${row['Student ID'] || '-'}</td>
+                    <td>${row['Name Student'] || '-'}</td>
+                    <td><span class="teacher-name">${row['Teacher regis'] || '-'}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
-        if (allUsers && allUsers.length > 0) {
-          // ค้นหาอีเมลจากทุกๆ คอลัมน์ของข้อมูล (รับประกันว่าเจอแน่นอน 100% ถ้ามีข้อมูล)
-          const matched = allUsers.find(row => {
-            return Object.values(row).some(val => 
-              val !== null && val !== undefined && String(val).trim().toLowerCase() === cleanEmail
-            );
-          });
-          if (matched) return { data: matched };
-        }
-      } catch (e) {
-        console.error("fetchUserRow Exception:", e);
-        return { error: e };
-      }
+        // ================= Login =================
+        async function login() {
+            const emailInput = document.getElementById('login-email').value.trim();
+            if (!emailInput) { alert("กรุณากรอก E-mail"); return; }
 
-      return { data: null };
-    }
+            const { data, error } = await supabase
+                .from('login')
+                .select('*')
+                .eq('E - mail', emailInput) // อ้างอิงตามชื่อคอลัมน์ที่คุณระบุ
+                .single();
 
-    async function processUserByEmail(email) {
-      if (!supabaseClient) return;
-      try {
-        const result = await fetchUserRow(email);
+            if (error || !data) {
+                alert("ไม่พบข้อมูล E-mail นี้ในระบบ หรือเกิดข้อผิดพลาด");
+                return;
+            }
 
-        if (result && result.error) {
-          alert(`⚠️ ไม่พบ E - mail ของท่าน ${result.error.message}`);
-          return;
-        }
+            currentUser = data;
+            document.getElementById('display-teacher').innerText = currentUser['Name'];
+            document.getElementById('display-class').innerText = currentUser['Class'];
+            
+            showView('register-view');
 
-        const data = result ? result.data : null;
-
-        if (!data) {
-          alert(`❌ ไม่พบอีเมล "${email}" ในฐานข้อมูล`);
-          return;
+            // ตรวจสอบสิทธิ์ ป.ป.ช.สพฐ.น้อย (Admin)
+            if (currentUser['Class'] === 'ป.ป.ช.สพฐ.น้อย') {
+                document.getElementById('admin-filter').style.display = 'block';
+                generateClassOptions();
+            } else {
+                document.getElementById('admin-filter').style.display = 'none';
+                checkAlreadyRegistered(currentUser['Class']);
+            }
         }
 
-        closeLoginModal();
-        try { localStorage.setItem('user_email_session', email); } catch(e){}
-        currentLoginInfo = data;
+        // ================= Registration Checking =================
+        async function checkAlreadyRegistered(className) {
+            const { data, error } = await supabase
+                .from('regis')
+                .select('Class')
+                .eq('Class', className);
 
-        document.getElementById('loginSection').style.display = 'none';
-        document.getElementById('appSection').style.display = 'block';
-
-        const teacherName = getRowField(data, ['Name', 'name', 'Teacher regis', 'ชื่อ']);
-        const teacherClass = getRowField(data, ['Class', 'class', 'ระดับชั้น', 'ชั้น']);
-        document.getElementById('teacherName').innerText = teacherName || '-';
-
-        // Check for "ป.ป.ช.สพฐ.น้อย" privilege
-        if (teacherName === 'ป.ป.ช.สพฐ.น้อย') {
-          isAdmin = true;
-          await setupAdminClassFilter();
-        } else {
-          isAdmin = false;
-          targetClass = teacherClass;
-          document.getElementById('teacherClassDisplay').innerText = targetClass || 'ไม่ได้ระบุชั้น';
-          await processClassRegistration(targetClass);
+            if (data && data.length > 0) {
+                alert(`ระดับชั้น ${className} มีการลงทะเบียนข้อมูลเรียบร้อยแล้ว ไม่สามารถลงซ้ำได้`);
+                showView('dashboard-view');
+            } else {
+                loadStudentsForClass(className);
+            }
         }
-      } catch (err) {
-        console.error('Error fetching user info:', err);
-        alert('เกิดข้อผิดพลาดในการตรวจสอบผู้ใช้: ' + err.message);
-      }
-    }
 
-    async function setupAdminClassFilter() {
-      let { data, error } = await supabaseClient.from('data').select('*').range(0, 5000);
-      if (error || !data) {
-        const res2 = await supabaseClient.from('Data').select('*').range(0, 5000);
-        data = res2.data;
-        error = res2.error;
-      }
-      if (error) {
-        alert(`เกิดปัญหาดึงข้อมูลตาราง 'data': ${error.message}`);
-        return;
-      }
-
-      let classList = [];
-      if (data) {
-        classList = [...new Set(data.map(item => getRowField(item, ['Class', 'class', 'ระดับชั้น', 'ชั้น'])))].filter(Boolean).sort((a, b) => 
-          a.localeCompare(b, 'th', { numeric: true })
-        );
-      }
-
-      let selectHtml = `<select id="adminClassSelect" class="class-filter-select" onchange="onAdminClassChange(this.value)">`;
-      classList.forEach(cls => {
-        selectHtml += `<option value="${cls}">ระดับชั้น ${cls}</option>`;
-      });
-      selectHtml += `</select>`;
-
-      document.getElementById('teacherClassDisplay').innerHTML = selectHtml;
-      
-      if (classList.length > 0) {
-        targetClass = classList[0];
-        await processClassRegistration(targetClass);
-      }
-    }
-
-    async function onAdminClassChange(newClass) {
-      targetClass = newClass;
-      await processClassRegistration(targetClass);
-    }
-
-    async function processClassRegistration(className) {
-      selectedStudents = [];
-      updateSubmitButton();
-
-      if (!className || !supabaseClient) return;
-
-      let { data: allRegis, error: regisError } = await supabaseClient.from('regis').select('*').range(0, 5000);
-      if (regisError || !allRegis) {
-        const res2 = await supabaseClient.from('Regis').select('*').range(0, 5000);
-        if (res2.data) {
-          allRegis = res2.data;
-          regisError = null;
+        // ================= Admin Class Filter =================
+        function generateClassOptions() {
+            const select = document.getElementById('class-filter');
+            select.innerHTML = '<option value="">-- เลือกห้องเรียน --</option>';
+            // สมมติข้อมูลห้อง ม.1/1 - ม.6/12 
+            for(let m=1; m<=6; m++) {
+                for(let r=1; r<=12; r++) {
+                    const opt = document.createElement('option');
+                    opt.value = `มัธยมศึกษาปีที่ ${m}/${r}`;
+                    opt.innerText = `ชั้นมัธยมศึกษาปีที่ ${m}/${r}`;
+                    select.appendChild(opt);
+                }
+            }
         }
-      }
 
-      const targetRoom = extractRoomNumber(className);
-      const regisData = (allRegis || []).filter(r => {
-        const regClass = getRowField(r, ['Class', 'class', 'ระดับชั้น']);
-        if (regClass.trim().toLowerCase() === className.trim().toLowerCase()) return true;
-        const regRoom = extractRoomNumber(regClass);
-        if (targetRoom && regRoom && targetRoom === regRoom) return true;
-        return false;
-      });
+        // ================= Load Students =================
+        async function loadStudentsForClass(className) {
+            if(!className) return;
+            selectedStudents = [];
+            
+            const { data, error } = await supabase
+                .from('data')
+                .select('*')
+                .eq('Class', className)
+                .order('No.', { ascending: true });
 
-      const alertBox = document.getElementById('statusAlert');
-      const selectionArea = document.getElementById('selectionFormArea');
-
-      if (regisData && regisData.length > 0) {
-        alertBox.style.display = 'block';
-        alertBox.innerText = `ระดับชั้น ${className} ได้ทำการลงทะเบียนอนุกรรมการเรียบร้อยแล้ว`;
-        selectionArea.style.display = 'none';
-      } else {
-        alertBox.style.display = 'none';
-        selectionArea.style.display = 'block';
-        await loadStudentsForClass(className);
-      }
-    }
-
-    // Helper function to extract class room number e.g. "ชั้นมัธยมศึกษาปีที่ 1/1" -> "1/1"
-    function extractRoomNumber(str) {
-      if (!str) return '';
-      const match = str.match(/\d+\/\d+/);
-      return match ? match[0] : str;
-    }
-
-    async function loadStudentsForClass(className) {
-      const container = document.getElementById('studentsGrid');
-      container.innerHTML = '<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">กำลังโหลดรายชื่อนักเรียน...</p>';
-
-      let { data: allStudents, error } = await supabaseClient.from('data').select('*').range(0, 5000);
-
-      if (error || !allStudents) {
-        const res2 = await supabaseClient.from('Data').select('*').range(0, 5000);
-        if (res2.data) {
-          allStudents = res2.data;
-          error = null;
+            if (error) { alert("เกิดข้อผิดพลาดในการดึงข้อมูลนักเรียน"); return; }
+            
+            currentStudentsData = data;
+            renderStudentCards(data);
         }
-      }
 
-      if (error) {
-        container.innerHTML = `<p style="color:#E53E3E; text-align:center; grid-column:1/-1;">โหลดข้อมูลไม่สำเร็จ: ${error.message}</p>`;
-        return;
-      }
+        function renderStudentCards(students) {
+            const container = document.getElementById('student-container');
+            container.innerHTML = '';
 
-      const targetRoom = extractRoomNumber(className);
+            if(students.length === 0) {
+                container.innerHTML = '<p>ไม่พบรายชื่อนักเรียนในห้องนี้</p>';
+                return;
+            }
 
-      const filtered = (allStudents || []).filter(student => {
-        const studentClass = getRowField(student, ['Class', 'class', 'ระดับชั้น', 'ชั้น']);
-        if (!studentClass) return false;
-        if (studentClass.trim().toLowerCase() === className.trim().toLowerCase()) return true;
-        
-        const studentRoom = extractRoomNumber(studentClass);
-        if (targetRoom && studentRoom && targetRoom === studentRoom) return true;
-        return false;
-      });
+            students.forEach((std, index) => {
+                const card = document.createElement('div');
+                card.className = 'student-card';
+                card.dataset.index = index;
+                
+                // รูปภาพแทนที่ด้วยสีเทาหากไม่มี Link
+                const photoSrc = std['Photo'] ? std['Photo'] : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 
-      if (filtered.length === 0) {
-        container.innerHTML = `<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">ไม่พบข้อมูลนักเรียนในระดับชั้น "${className}"</p>`;
-        return;
-      }
+                card.innerHTML = `
+                    <img src="${photoSrc}" class="student-photo" alt="รูปนักเรียน" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='">
+                    <div class="student-info">
+                        <strong>เลขที่ ${std['No.'] || '-'}</strong>
+                        <span>รหัส: ${std['Student ID'] || '-'}</span>
+                        <span>ชื่อ: ${std['Name'] || '-'}</span>
+                        <input type="tel" id="tel-${index}" placeholder="เบอร์โทรศัพท์ 10 หลัก" maxlength="10" onclick="event.stopPropagation();">
+                    </div>
+                `;
 
-      currentClassStudents = filtered;
-      container.innerHTML = '';
-
-      filtered.sort((a, b) => {
-        const noA = Number(getRowField(a, ['No.', 'no', 'No', 'เลขที่'])) || 0;
-        const noB = Number(getRowField(b, ['No.', 'no', 'No', 'เลขที่'])) || 0;
-        return noA - noB;
-      });
-
-      filtered.forEach(student => {
-        const studentId = getRowField(student, ['Student ID', 'student_id', 'Student_ID', 'รหัสนักเรียน', 'id']);
-        const photoUrl = getRowField(student, ['Photo', 'photo', 'รูปภาพ', 'ภาพ']) || 'https://via.placeholder.com/70x85?text=No+Photo';
-        const studentName = getRowField(student, ['Name', 'name', 'ชื่อ-สกุล', 'ชื่อ']);
-        const studentNo = getRowField(student, ['No.', 'no', 'No', 'เลขที่']);
-
-        const card = document.createElement('div');
-        card.className = 'student-card';
-        card.id = `card-${studentId}`;
-        card.onclick = (e) => toggleStudentSelect(student, e);
-
-        card.innerHTML = `
-          <img src="${photoUrl}" class="student-photo" alt="ภาพ" onerror="this.src='https://via.placeholder.com/70x85?text=No+Photo'">
-          <div class="student-details">
-            <span class="name">${studentName || '-'}</span>
-            <span>เลขที่: ${studentNo || '-'} | รหัส: ${studentId || '-'}</span>
-            <input type="tel" id="tel-${studentId}" class="tel-input" placeholder="เบอร์โทร 10 หลัก" maxlength="10" onclick="event.stopPropagation()" oninput="validatePhoneInput(this, '${studentId}')">
-          </div>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function toggleStudentSelect(student, event) {
-      const studentId = getRowField(student, ['Student ID', 'student_id', 'Student_ID', 'รหัสนักเรียน', 'id']);
-      const index = selectedStudents.findIndex(s => getRowField(s, ['Student ID', 'student_id', 'Student_ID', 'รหัสนักเรียน', 'id']) === studentId);
-      const cardEl = document.getElementById(`card-${studentId}`);
-
-      if (index > -1) {
-        selectedStudents.splice(index, 1);
-        cardEl.classList.remove('selected');
-      } else {
-        if (selectedStudents.length >= 2) return alert('เลือกได้สูงสุด 2 คนเท่านั้น');
-        selectedStudents.push(student);
-        cardEl.classList.add('selected');
-      }
-      updateSubmitButton();
-    }
-
-    function validatePhoneInput(inputEl, studentId) {
-      inputEl.value = inputEl.value.replace(/[^0-9]/g, '');
-      updateSubmitButton();
-    }
-
-    function updateSubmitButton() {
-      const btn = document.getElementById('btnSubmit');
-      const count = selectedStudents.length;
-      btn.innerText = `บันทึกข้อมูลอนุกรรมการ (เลือกแล้ว ${count}/2 คน)`;
-
-      let allPhonesValid = true;
-      selectedStudents.forEach(st => {
-        const id = getRowField(st, ['Student ID', 'student_id', 'Student_ID', 'รหัสนักเรียน', 'id']);
-        const telVal = document.getElementById(`tel-${id}`)?.value || '';
-        if (telVal.length !== 10) allPhonesValid = false;
-      });
-      btn.disabled = !(count === 2 && allPhonesValid);
-    }
-
-    async function submitSelection() {
-      if (selectedStudents.length !== 2 || !supabaseClient) return;
-      
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true;
-      btn.innerText = "กำลังบันทึกข้อมูล...";
-
-      const teacherRegisName = getRowField(currentLoginInfo, ['Name', 'name', 'Teacher regis', 'ชื่อ']);
-      const timestamp = new Date().toISOString();
-
-      const insertPayload = selectedStudents.map(student => {
-        const studentId = getRowField(student, ['Student ID', 'student_id', 'Student_ID', 'รหัสนักเรียน', 'id']);
-        const studentName = getRowField(student, ['Name', 'name', 'ชื่อ-สกุล', 'ชื่อ']);
-        const studentNo = getRowField(student, ['No.', 'no', 'No', 'เลขที่']);
-        const telVal = document.getElementById(`tel-${studentId}`).value;
-
-        return {
-          'Teacher regis': teacherRegisName,
-          'Class': targetClass,
-          'No.': studentNo,
-          'Student ID': studentId,
-          'Name Student': studentName,
-          'Tel.': telVal,
-          'Time Stamp': timestamp
-        };
-      });
-
-      const { error } = await supabaseClient.from('regis').insert(insertPayload);
-      if (error) {
-        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
-        btn.disabled = false;
-        btn.innerText = `บันทึกข้อมูลอนุกรรมการ (เลือกแล้ว 2/2 คน)`;
-      } else {
-        alert('บันทึกข้อมูลอนุกรรมการเรียบร้อยแล้ว!');
-        await processClassRegistration(targetClass);
-        await loadRegisSummary();
-      }
-    }
-
-    async function loadRegisSummary() {
-      if (!supabaseClient) return;
-      const tableBody = document.getElementById('regisTableBody');
-
-      let { data, error } = await supabaseClient.from('regis').select('*').range(0, 5000);
-      if (error || !data) {
-        const res2 = await supabaseClient.from('Regis').select('*').range(0, 5000);
-        if (res2.data) {
-          data = res2.data;
-          error = null;
+                card.addEventListener('click', () => toggleStudentSelection(card, index));
+                container.appendChild(card);
+            });
         }
-      }
 
-      if (error) {
-        tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#E53E3E;">ไม่สามารถดึงข้อมูลสรุปได้: ${error.message}</td></tr>`;
-        return;
-      }
-      if (!data || data.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">ยังไม่มีข้อมูลการลงทะเบียน</td></tr>';
-        return;
-      }
+        // ================= Selection Logic =================
+        function toggleStudentSelection(card, index) {
+            const isSelected = card.classList.contains('selected');
 
-      const groupedByClass = {};
-      data.forEach(row => {
-        const cls = getRowField(row, ['Class', 'class', 'ระดับชั้น']) || 'ไม่ระบุชั้น';
-        if (!groupedByClass[cls]) groupedByClass[cls] = [];
-        groupedByClass[cls].push(row);
-      });
+            if (isSelected) {
+                card.classList.remove('selected');
+                selectedStudents = selectedStudents.filter(i => i !== index);
+                document.getElementById(`tel-${index}`).value = ''; // Clear phone
+            } else {
+                if (selectedStudents.length >= 2) {
+                    // ปลดคนแรกที่เลือกออก (คนเก่าสุด)
+                    const removedIndex = selectedStudents.shift();
+                    const removedCard = document.querySelector(`.student-card[data-index='${removedIndex}']`);
+                    if(removedCard) {
+                        removedCard.classList.remove('selected');
+                        document.getElementById(`tel-${removedIndex}`).value = '';
+                    }
+                }
+                card.classList.add('selected');
+                selectedStudents.push(index);
+                document.getElementById(`tel-${index}`).focus();
+            }
+        }
 
-      const sortedClasses = Object.keys(groupedByClass).sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
+        // ================= Submit Logic =================
+        async function submitRegistration() {
+            if (selectedStudents.length !== 2) {
+                alert("กรุณาเลือกนักเรียนให้ครบ 2 คนก่อนบันทึกข้อมูล");
+                return;
+            }
 
-      let html = '';
-      sortedClasses.forEach(cls => {
-        html += `<tr class="class-header-row"><td colspan="4">ระดับชั้น ${cls}</td></tr>`;
-        const students = groupedByClass[cls].sort((a, b) => Number(getRowField(a, ['No.', 'no', 'เลขที่'])) - Number(getRowField(b, ['No.', 'no', 'เลขที่'])));
-        students.forEach(st => {
-          html += `
-            <tr>
-              <td>${getRowField(st, ['No.', 'no', 'เลขที่']) || '-'}</td>
-              <td>${getRowField(st, ['Student ID', 'student_id', 'รหัสนักเรียน']) || '-'}</td>
-              <td>${getRowField(st, ['Name Student', 'name_student', 'Name', 'ชื่อ']) || '-'}</td>
-              <td><span class="teacher-small">${getRowField(st, ['Teacher regis', 'teacher_regis', 'ผู้ส่งข้อมูล']) || '-'}</span></td>
-            </tr>
-          `;
-        });
-      });
-      tableBody.innerHTML = html;
-    }
-  </script>
+            let valid = true;
+            const insertData = [];
+            const timestamp = new Date().toISOString();
+            
+            // ตรวจสอบว่าถ้าเป็น Admin ให้บันทึก Class ของห้องที่เลือก ไม่ใช่ 'ป.ป.ช.สพฐ.น้อย'
+            const registerClass = currentUser['Class'] === 'ป.ป.ช.สพฐ.น้อย' 
+                ? document.getElementById('class-filter').value 
+                : currentUser['Class'];
+
+            if (!registerClass) { alert("กรุณาเลือกระดับชั้น"); return; }
+
+            selectedStudents.forEach(index => {
+                const std = currentStudentsData[index];
+                const telInput = document.getElementById(`tel-${index}`).value;
+                
+                if (!telInput || telInput.length !== 10 || isNaN(telInput)) {
+                    valid = false;
+                }
+
+                insertData.push({
+                    "Teacher regis": currentUser['Name'],
+                    "Class": registerClass,
+                    "No.": std['No.'],
+                    "Student ID": std['Student ID'],
+                    "Name Student": std['Name'],
+                    "Tel.": telInput,
+                    "Time Stamp": timestamp
+                });
+            });
+
+            if (!valid) {
+                alert("กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก (ตัวเลขเท่านั้น) สำหรับนักเรียนที่เลือก");
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('regis')
+                .insert(insertData);
+
+            if (error) {
+                alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + error.message);
+                console.error(error);
+            } else {
+                alert("บันทึกข้อมูลสำเร็จเรียบร้อย!");
+                document.getElementById('login-email').value = ''; // รีเซ็ตการล็อกอิน
+                showView('dashboard-view');
+            }
+        }
+
+        // เริ่มโหลดหน้าแรก
+        window.onload = loadDashboardData;
+    </script>
 </body>
 </html>
