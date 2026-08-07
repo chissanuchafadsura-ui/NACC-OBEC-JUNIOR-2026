@@ -504,7 +504,7 @@
 
       <div class="email-input-group">
         <label for="modalEmailInput">Google E-mail โรงเรียน:</label>
-        <input type="email" id="modalEmailInput" placeholder="เช่น teacher1@phukhieo.ac.th" onkeyup="if(event.key==='Enter') submitEmailLogin()">
+        <input type="email" id="modalEmailInput" placeholder="เช่น pinthong.s@phukhieo.ac.th" onkeyup="if(event.key==='Enter') submitEmailLogin()">
       </div>
 
       <div class="modal-btns">
@@ -562,7 +562,7 @@
       document.getElementById('loginModal').style.display = 'none';
     }
 
-    // ฟังก์ชันอเนกประสงค์ดึงค่าฟิลด์จาก object โดยไม่สนใจอักขระพิเศษหรือชื่อคอลัมน์เล็ก/ใหญ่
+    // ฟังก์ชันช่วยสกัดค่าฟิลด์จาก object อย่างยืดหยุ่น
     function getRowField(row, possibleKeys) {
       if (!row) return '';
       for (const k of possibleKeys) {
@@ -619,37 +619,66 @@
       }
     }
 
-    // ฟังก์ชันค้นหาข้อมูลผู้ใช้ในตาราง login ตรวจจับทุกคอลัมน์แบบยืดหยุ่น
+    // ฟังก์ชันค้นหาข้อมูลผู้ใช้ในตาราง login แบบดึงข้อมูลไม่จำกัดแถว
     async function fetchUserRow(email) {
       if (!supabaseClient) return null;
 
       const cleanEmail = email.trim().toLowerCase();
 
-      let { data: allUsers, error } = await supabaseClient.from('login').select('*');
-      if (error || !allUsers || allUsers.length === 0) {
-        const res2 = await supabaseClient.from('Login').select('*');
-        if (res2.data && res2.data.length > 0) {
-          allUsers = res2.data;
-          error = null;
+      try {
+        // 1. ค้นหาโดยตรงจากคอลัมน์ "E - mail"
+        const { data: directData, error: directErr } = await supabaseClient
+          .from('login')
+          .select('*')
+          .ilike('E - mail', cleanEmail)
+          .maybeSingle();
+
+        if (directData) return { data: directData };
+
+        // 2. ค้นหาจากชื่อคอลัมน์อื่นๆ เผื่อสะกดต่างกัน
+        for (const col of ['E-mail', 'email', 'Email', 'E_mail']) {
+          const res = await supabaseClient
+            .from('login')
+            .select('*')
+            .ilike(col, cleanEmail)
+            .maybeSingle();
+          if (res.data) return { data: res.data };
         }
-      }
 
-      if (error) {
-        console.error("Login Query Error:", error);
-        return { error };
-      }
+        // 3. ดึงทุกรายการด้วย range(0, 5000) เพื่อป้องกันการติดขัดข้อจำกัด 100 รายการแรก
+        let { data: allUsers, error } = await supabaseClient
+          .from('login')
+          .select('*')
+          .range(0, 5000);
 
-      if (allUsers && allUsers.length > 0) {
-        const matched = allUsers.find(row => {
-          for (const key of Object.keys(row)) {
-            const val = String(row[key] || '').trim().toLowerCase();
-            if (val === cleanEmail) {
-              return true;
-            }
+        if (error || !allUsers || allUsers.length === 0) {
+          const res2 = await supabaseClient.from('Login').select('*').range(0, 5000);
+          if (res2.data && res2.data.length > 0) {
+            allUsers = res2.data;
+            error = null;
           }
-          return false;
-        });
-        return { data: matched };
+        }
+
+        if (error) {
+          console.error("Login Query Error:", error);
+          return { error };
+        }
+
+        if (allUsers && allUsers.length > 0) {
+          const matched = allUsers.find(row => {
+            for (const key of Object.keys(row)) {
+              const val = String(row[key] || '').trim().toLowerCase();
+              if (val === cleanEmail) {
+                return true;
+              }
+            }
+            return false;
+          });
+          if (matched) return { data: matched };
+        }
+      } catch (e) {
+        console.error("fetchUserRow Exception:", e);
+        return { error: e };
       }
 
       return { data: null };
@@ -699,9 +728,9 @@
     }
 
     async function setupAdminClassFilter() {
-      let { data, error } = await supabaseClient.from('data').select('*');
+      let { data, error } = await supabaseClient.from('data').select('*').range(0, 5000);
       if (error || !data) {
-        const res2 = await supabaseClient.from('Data').select('*');
+        const res2 = await supabaseClient.from('Data').select('*').range(0, 5000);
         data = res2.data;
         error = res2.error;
       }
@@ -742,9 +771,9 @@
 
       if (!className || !supabaseClient) return;
 
-      let { data: allRegis, error: regisError } = await supabaseClient.from('regis').select('*');
+      let { data: allRegis, error: regisError } = await supabaseClient.from('regis').select('*').range(0, 5000);
       if (regisError || !allRegis) {
-        const res2 = await supabaseClient.from('Regis').select('*');
+        const res2 = await supabaseClient.from('Regis').select('*').range(0, 5000);
         if (res2.data) {
           allRegis = res2.data;
           regisError = null;
@@ -785,10 +814,10 @@
       const container = document.getElementById('studentsGrid');
       container.innerHTML = '<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">กำลังโหลดรายชื่อนักเรียน...</p>';
 
-      let { data: allStudents, error } = await supabaseClient.from('data').select('*');
+      let { data: allStudents, error } = await supabaseClient.from('data').select('*').range(0, 5000);
 
       if (error || !allStudents) {
-        const res2 = await supabaseClient.from('Data').select('*');
+        const res2 = await supabaseClient.from('Data').select('*').range(0, 5000);
         if (res2.data) {
           allStudents = res2.data;
           error = null;
@@ -927,9 +956,9 @@
       if (!supabaseClient) return;
       const tableBody = document.getElementById('regisTableBody');
 
-      let { data, error } = await supabaseClient.from('regis').select('*');
+      let { data, error } = await supabaseClient.from('regis').select('*').range(0, 5000);
       if (error || !data) {
-        const res2 = await supabaseClient.from('Regis').select('*');
+        const res2 = await supabaseClient.from('Regis').select('*').range(0, 5000);
         if (res2.data) {
           data = res2.data;
           error = null;
