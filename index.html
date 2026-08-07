@@ -555,7 +555,6 @@
         }, 100);
       } catch (e) {
         alert("ไม่สามารถเปิดหน้าต่างเข้าสู่ระบบได้ โปรดรีเฟรชหน้าเว็บ (F5)");
-        console.error(e);
       }
     }
 
@@ -604,23 +603,43 @@
       }
     }
 
+    // ฟังก์ชันค้นหาข้อมูลผู้ใช้ในตาราง login แบบปลอดภัย
+    async function fetchUserRow(email) {
+      if (!supabaseClient) return null;
+
+      // วิธีที่ 1: ดึงทุกแถวใน login มาเปรียบเทียบอีเมลใน JavaScript (ปลอดภัยจาก Syntax Error เรื่องเว้นวรรคคอลัมน์)
+      const { data: allUsers, error } = await supabaseClient.from('login').select('*');
+      if (error) {
+        console.error("Login Query Error:", error);
+        return { error };
+      }
+
+      if (allUsers && allUsers.length > 0) {
+        const matched = allUsers.find(row => {
+          // ตรวจสอบคอลัมน์ "E - mail", "E-mail", "email", "Name", ฯลฯ
+          const rowEmail = row['E - mail'] || row['E-mail'] || row['email'] || row['Email'] || '';
+          return rowEmail.trim().toLowerCase() === email.trim().toLowerCase();
+        });
+        return { data: matched };
+      }
+
+      return { data: null };
+    }
+
     async function processUserByEmail(email) {
       if (!supabaseClient) return;
       try {
-        // ดึงข้อมูลจากตาราง login
-        const { data, error } = await supabaseClient
-          .from('login')
-          .select('*')
-          .eq('E - mail', email)
-          .maybeSingle();
+        const result = await fetchUserRow(email);
 
-        if (error) {
-          alert(`⚠️ ไม่สามารถดึงข้อมูลได้:\n${error.message}\n\nสาเหตุ: โปรดรันคำสั่ง SQL สร้างตารางและตั้งค่า Policy บน Supabase ก่อนครับ`);
+        if (result.error) {
+          alert(`⚠️ ไม่สามารถดึงข้อมูลจากตาราง login ได้:\n${result.error.message}`);
           return;
         }
 
+        const data = result.data;
+
         if (!data) {
-          alert(`❌ ไม่พบอีเมล "${email}" ในระบบ!\n\nกรุณาเช็คในตาราง 'login' ของ Supabase ว่ามีข้อมูลในช่อง 'E - mail' ตรงกับที่พิมพ์หรือยังครับ`);
+          alert(`❌ ไม่พบอีเมล "${email}" ในตาราง 'login'!\n\nกรุณาตรวจสอบว่าอีเมลตรงกับที่บันทึกไว้ในช่อง 'E - mail' ของตาราง 'login' หรือไม่`);
           return;
         }
 
@@ -631,8 +650,8 @@
         document.getElementById('loginSection').style.display = 'none';
         document.getElementById('appSection').style.display = 'block';
 
-        const teacherName = data['Name'];
-        const teacherClass = data['Class'];
+        const teacherName = data['Name'] || data['name'];
+        const teacherClass = data['Class'] || data['class'];
         document.getElementById('teacherName').innerText = teacherName || '-';
 
         if (teacherName === 'ป.ป.ช.สพฐ.น้อย') {
@@ -659,7 +678,7 @@
 
       let classList = [];
       if (data) {
-        classList = [...new Set(data.map(item => item['Class']))].filter(Boolean).sort((a, b) => 
+        classList = [...new Set(data.map(item => item['Class'] || item['class']))].filter(Boolean).sort((a, b) => 
           a.localeCompare(b, 'th', { numeric: true })
         );
       }
@@ -712,31 +731,58 @@
       }
     }
 
+    // ฟังก์ชันช่วยสกัดเลขห้องเรียน เช่น "ชั้นมัธยมศึกษาปีที่ 1/1" -> "1/1"
+    function extractRoomNumber(str) {
+      if (!str) return '';
+      const match = str.match(/\d+\/\d+/);
+      return match ? match[0] : str;
+    }
+
     async function loadStudentsForClass(className) {
       const container = document.getElementById('studentsGrid');
       container.innerHTML = '<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">กำลังโหลดรายชื่อนักเรียน...</p>';
 
-      const { data, error } = await supabaseClient
+      // ค้นหาแบบตรงตัวก่อน
+      let { data, error } = await supabaseClient
         .from('data')
         .select('*')
-        .eq('Class', className)
-        .order('No.', { ascending: true });
+        .eq('Class', className);
+
+      // หากไม่เจอข้อมูล ให้ลองค้นหาจากเลขห้องเรียน (เช่น "1/1")
+      if ((!data || data.length === 0) && !error) {
+        const roomNo = extractRoomNumber(className);
+        if (roomNo) {
+          const res2 = await supabaseClient
+            .from('data')
+            .select('*')
+            .ilike('Class', `%${roomNo}%`);
+          if (res2.data && res2.data.length > 0) {
+            data = res2.data;
+          }
+        }
+      }
 
       if (error) {
         container.innerHTML = `<p style="color:#E53E3E; text-align:center; grid-column:1/-1;">โหลดข้อมูลไม่สำเร็จ: ${error.message}</p>`;
         return;
       }
       if (!data || data.length === 0) {
-        container.innerHTML = '<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">ไม่พบข้อมูลนักเรียนในระดับชั้นนี้</p>';
+        container.innerHTML = `<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">ไม่พบข้อมูลนักเรียนในระดับชั้น "${className}"</p>`;
         return;
       }
 
       currentClassStudents = data;
       container.innerHTML = '';
 
+      // เรียงลำดับตามเลขที่
+      data.sort((a, b) => Number(a['No.'] || a['no'] || 0) - Number(b['No.'] || b['no'] || 0));
+
       data.forEach(student => {
-        const studentId = student['Student ID'];
-        const photoUrl = student['Photo'] || 'https://via.placeholder.com/70x85?text=No+Photo';
+        const studentId = student['Student ID'] || student['student_id'];
+        const photoUrl = student['Photo'] || student['photo'] || 'https://via.placeholder.com/70x85?text=No+Photo';
+        const studentName = student['Name'] || student['name'];
+        const studentNo = student['No.'] || student['no'];
+
         const card = document.createElement('div');
         card.className = 'student-card';
         card.id = `card-${studentId}`;
@@ -745,8 +791,8 @@
         card.innerHTML = `
           <img src="${photoUrl}" class="student-photo" alt="ภาพ" onerror="this.src='https://via.placeholder.com/70x85?text=No+Photo'">
           <div class="student-details">
-            <span class="name">${student['Name'] || '-'}</span>
-            <span>เลขที่: ${student['No.'] || '-'} | รหัส: ${studentId || '-'}</span>
+            <span class="name">${studentName || '-'}</span>
+            <span>เลขที่: ${studentNo || '-'} | รหัส: ${studentId || '-'}</span>
             <input type="tel" id="tel-${studentId}" class="tel-input" placeholder="เบอร์โทร 10 หลัก" maxlength="10" onclick="event.stopPropagation()" oninput="validatePhoneInput(this, '${studentId}')">
           </div>
         `;
@@ -755,8 +801,8 @@
     }
 
     function toggleStudentSelect(student, event) {
-      const studentId = student['Student ID'];
-      const index = selectedStudents.findIndex(s => s['Student ID'] === studentId);
+      const studentId = student['Student ID'] || student['student_id'];
+      const index = selectedStudents.findIndex(s => (s['Student ID'] || s['student_id']) === studentId);
       const cardEl = document.getElementById(`card-${studentId}`);
 
       if (index > -1) {
@@ -782,7 +828,8 @@
 
       let allPhonesValid = true;
       selectedStudents.forEach(st => {
-        const telVal = document.getElementById(`tel-${st['Student ID']}`)?.value || '';
+        const id = st['Student ID'] || st['student_id'];
+        const telVal = document.getElementById(`tel-${id}`)?.value || '';
         if (telVal.length !== 10) allPhonesValid = false;
       });
       btn.disabled = !(count === 2 && allPhonesValid);
@@ -795,18 +842,21 @@
       btn.disabled = true;
       btn.innerText = "กำลังบันทึกข้อมูล...";
 
-      const teacherRegisName = currentLoginInfo['Name'];
+      const teacherRegisName = currentLoginInfo['Name'] || currentLoginInfo['name'];
       const timestamp = new Date().toISOString();
 
       const insertPayload = selectedStudents.map(student => {
-        const studentId = student['Student ID'];
+        const studentId = student['Student ID'] || student['student_id'];
+        const studentName = student['Name'] || student['name'];
+        const studentNo = student['No.'] || student['no'];
         const telVal = document.getElementById(`tel-${studentId}`).value;
+
         return {
           'Teacher regis': teacherRegisName,
           'Class': targetClass,
-          'No.': student['No.'],
+          'No.': studentNo,
           'Student ID': studentId,
-          'Name Student': student['Name'],
+          'Name Student': studentName,
           'Tel.': telVal,
           'Time Stamp': timestamp
         };
@@ -841,7 +891,7 @@
 
       const groupedByClass = {};
       data.forEach(row => {
-        const cls = row['Class'] || 'ไม่ระบุชั้น';
+        const cls = row['Class'] || row['class'] || 'ไม่ระบุชั้น';
         if (!groupedByClass[cls]) groupedByClass[cls] = [];
         groupedByClass[cls].push(row);
       });
@@ -851,14 +901,14 @@
       let html = '';
       sortedClasses.forEach(cls => {
         html += `<tr class="class-header-row"><td colspan="4">ระดับชั้น ${cls}</td></tr>`;
-        const students = groupedByClass[cls].sort((a, b) => Number(a['No.']) - Number(b['No.']));
+        const students = groupedByClass[cls].sort((a, b) => Number(a['No.'] || a['no'] || 0) - Number(b['No.'] || b['no'] || 0));
         students.forEach(st => {
           html += `
             <tr>
-              <td>${st['No.'] || '-'}</td>
-              <td>${st['Student ID'] || '-'}</td>
-              <td>${st['Name Student'] || '-'}</td>
-              <td><span class="teacher-small">${st['Teacher regis'] || '-'}</span></td>
+              <td>${st['No.'] || st['no'] || '-'}</td>
+              <td>${st['Student ID'] || st['student_id'] || '-'}</td>
+              <td>${st['Name Student'] || st['name_student'] || '-'}</td>
+              <td><span class="teacher-small">${st['Teacher regis'] || st['teacher_regis'] || '-'}</span></td>
             </tr>
           `;
         });
