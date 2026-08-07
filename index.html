@@ -349,47 +349,6 @@
       margin-bottom: 20px;
     }
 
-    .btn-google-oauth {
-      width: 100%;
-      padding: 12px;
-      background: #4285F4;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 15px;
-      transition: background 0.2s ease;
-    }
-
-    .btn-google-oauth:hover {
-      background: #3367D6;
-    }
-
-    .divider {
-      display: flex;
-      align-items: center;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      margin: 15px 0;
-    }
-
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .divider span {
-      padding: 0 10px;
-    }
-
     .email-input-group {
       text-align: left;
     }
@@ -537,31 +496,20 @@
 
   </div>
 
-  <!-- Modal ล็อกอิน -->
+  <!-- Modal ล็อกอินด้วยอีเมล -->
   <div id="loginModal" class="modal-overlay">
     <div class="modal-card">
-      <h3>เลือกวิธีเข้าสู่ระบบ</h3>
-      <p>กรุณาใช้อีเมลโรงเรียนที่อยู่ในตาราง 'login' (ช่อง E - mail)</p>
-
-      <button class="btn-google-oauth" onclick="loginWithGoogleOAuth()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C6.721,2,2,6.721,2,12.545S6.721,23.09,12.545,23.09c6.301,0,10.455-4.432,10.455-10.637c0-0.781-0.078-1.536-0.218-2.214H12.545z"/>
-        </svg>
-        เข้าสู่ระบบด้วย Google Account
-      </button>
-
-      <div class="divider">
-        <span>หรือ กรอกอีเมลโดยตรง</span>
-      </div>
+      <h3>เข้าสู่ระบบ</h3>
+      <p>กรุณาระบุ Google E-mail โรงเรียนเพื่อเข้าสู่ระบบ</p>
 
       <div class="email-input-group">
         <label for="modalEmailInput">Google E-mail โรงเรียน:</label>
-        <input type="email" id="modalEmailInput" placeholder="เช่น teacher@phukhieo.ac.th" onkeyup="if(event.key==='Enter') submitEmailLogin()">
+        <input type="email" id="modalEmailInput" placeholder="เช่น teacher1@phukhieo.ac.th" onkeyup="if(event.key==='Enter') submitEmailLogin()">
       </div>
 
       <div class="modal-btns">
         <button class="btn-secondary" onclick="closeLoginModal()">ยกเลิก</button>
-        <button id="btnSubmitEmail" class="btn-primary" onclick="submitEmailLogin()">ตกลง</button>
+        <button id="btnSubmitEmail" class="btn-primary" onclick="submitEmailLogin()">เข้าสู่ระบบ</button>
       </div>
     </div>
   </div>
@@ -615,26 +563,11 @@
       document.getElementById('loginModal').style.display = 'none';
     }
 
-    async function loginWithGoogleOAuth() {
-      if (!supabaseClient) return alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
-      try {
-        const { error } = await supabaseClient.auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo: window.location.href }
-        });
-        if (error) {
-          alert('Google OAuth Error: ' + error.message + '\n\nกรุณาระบุ E-mail ในช่องด้านล่างแทนครับ');
-        }
-      } catch (err) {
-        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ Google: ' + err.message);
-      }
-    }
-
     async function submitEmailLogin() {
       if (!supabaseClient) return alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
       const email = document.getElementById('modalEmailInput').value.trim();
       if (!email) {
-        alert('กรุณากรอกอีเมลก่อนกดตกลง');
+        alert('กรุณากรอกอีเมลก่อนกดเข้าสู่ระบบ');
         return;
       }
       
@@ -644,7 +577,7 @@
 
       await processUserByEmail(email);
 
-      btn.innerText = "ตกลง";
+      btn.innerText = "เข้าสู่ระบบ";
       btn.disabled = false;
     }
 
@@ -658,21 +591,10 @@
 
     async function checkAuthSession() {
       let activeEmail = null;
-      
-      if (supabaseClient) {
-        try {
-          const { data: { session } } = await supabaseClient.auth.getSession();
-          if (session && session.user && session.user.email) {
-            activeEmail = session.user.email;
-          }
-        } catch(e) { console.warn("Supabase session check skipped:", e); }
-      }
 
-      if (!activeEmail) {
-        try {
-          activeEmail = localStorage.getItem('user_email_session');
-        } catch(e) { console.warn("LocalStorage not available:", e); }
-      }
+      try {
+        activeEmail = localStorage.getItem('user_email_session');
+      } catch(e) { console.warn("LocalStorage not available:", e); }
 
       if (activeEmail && supabaseClient) {
         await processUserByEmail(activeEmail);
@@ -685,6 +607,7 @@
     async function processUserByEmail(email) {
       if (!supabaseClient) return;
       try {
+        // ดึงข้อมูลจากตาราง login
         const { data, error } = await supabaseClient
           .from('login')
           .select('*')
@@ -692,14 +615,12 @@
           .maybeSingle();
 
         if (error) {
-          alert(`เกิดปัญหาดึงข้อมูล 'login': ${error.message}`);
-          logout();
+          alert(`⚠️ ไม่สามารถดึงข้อมูลได้:\n${error.message}\n\nสาเหตุ: โปรดรันคำสั่ง SQL สร้างตารางและตั้งค่า Policy บน Supabase ก่อนครับ`);
           return;
         }
 
         if (!data) {
-          alert(`ไม่พบสิทธิ์การเข้าใช้งานสำหรับอีเมล:\n"${email}"\nกรุณาตรวจสอบว่าอีเมลตรงกับในระบบ`);
-          logout();
+          alert(`❌ ไม่พบอีเมล "${email}" ในระบบ!\n\nกรุณาเช็คในตาราง 'login' ของ Supabase ว่ามีข้อมูลในช่อง 'E - mail' ตรงกับที่พิมพ์หรือยังครับ`);
           return;
         }
 
@@ -726,13 +647,15 @@
       } catch (err) {
         console.error('Error fetching user info:', err);
         alert('เกิดข้อผิดพลาดในการตรวจสอบผู้ใช้: ' + err.message);
-        closeLoginModal();
       }
     }
 
     async function setupAdminClassFilter() {
       const { data, error } = await supabaseClient.from('data').select('Class');
-      if (error) return;
+      if (error) {
+        alert(`เกิดปัญหาดึงข้อมูลตาราง 'data': ${error.message}`);
+        return;
+      }
 
       let classList = [];
       if (data) {
@@ -770,6 +693,10 @@
         .from('regis')
         .select('*')
         .eq('Class', className);
+
+      if (regisError) {
+        console.error("Regis Error:", regisError);
+      }
 
       const alertBox = document.getElementById('statusAlert');
       const selectionArea = document.getElementById('selectionFormArea');
@@ -904,7 +831,7 @@
       const { data, error } = await supabaseClient.from('regis').select('*');
 
       if (error) {
-        tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#E53E3E;">ไม่สามารถดึงข้อมูลได้: ${error.message}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#E53E3E;">ไม่สามารถดึงข้อมูลสรุปได้: ${error.message}</td></tr>`;
         return;
       }
       if (!data || data.length === 0) {
