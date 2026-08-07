@@ -54,7 +54,6 @@
       flex: 1;
     }
 
-    /* Header Area - White Background Style */
     header {
       text-align: center;
       padding: 25px 15px;
@@ -104,7 +103,6 @@
       color: var(--gold-hover);
     }
 
-    /* Panels & Cards */
     .card-panel {
       background: #FFFFFF;
       border-radius: 12px;
@@ -114,7 +112,6 @@
       border: 1px solid var(--border-color);
     }
 
-    /* Login Button */
     .btn-login {
       display: inline-flex;
       align-items: center;
@@ -141,7 +138,6 @@
       box-shadow: 0 6px 16px rgba(212, 175, 55, 0.45);
     }
 
-    /* User Information Header */
     .user-info {
       display: flex;
       flex-wrap: wrap;
@@ -173,7 +169,6 @@
       background: #F8F9FA;
     }
 
-    /* Students Grid */
     .students-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
@@ -268,7 +263,6 @@
       opacity: 0.7;
     }
 
-    /* Summary Table */
     .table-container {
       overflow-x: auto;
       margin-top: 15px;
@@ -321,7 +315,6 @@
       border: 1px solid #FCD34D;
     }
 
-    /* Login Modal Options */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -448,7 +441,6 @@
       font-weight: 500;
     }
 
-    /* Footer */
     footer {
       text-align: center;
       padding: 20px;
@@ -480,7 +472,6 @@
 <body>
 
   <div class="container">
-    <!-- Header with White Background for Logos -->
     <header>
       <div class="logo-group">
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Emblem_of_the_National_Anti-Corruption_Commission_Thailand.svg/960px-Emblem_of_the_National_Anti-Corruption_Commission_Thailand.svg.png" alt="ตรา ป.ป.ช.">
@@ -493,9 +484,8 @@
       <h2>โรงเรียนภูเขียว สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาชัยภูมิ</h2>
     </header>
 
-    <!-- Main Dashboard Panel -->
     <div class="card-panel">
-      <!-- Section 1: Non-logged in state -->
+      <!-- ส่วนหน้าก่อนล็อกอิน -->
       <div id="loginSection" style="text-align: center; padding: 15px 0;">
         <button id="btnLogin" class="btn-login" onclick="openLoginModal()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -505,7 +495,7 @@
         </button>
       </div>
 
-      <!-- Section 2: Logged in state -->
+      <!-- ส่วนหน้าหลังล็อกอิน -->
       <div id="appSection" style="display: none;">
         <div class="user-info">
           <p>ชื่อผู้กรอกข้อมูล : <span id="teacherName">-</span></p>
@@ -515,20 +505,17 @@
 
         <div id="statusAlert" class="alert-box"></div>
 
-        <!-- Form for Student Selection -->
         <div id="selectionFormArea">
           <p style="font-weight: 500; margin-bottom: 10px;">กรุณาคลิกเลือกนักเรียนจำนวน <b style="color: var(--primary-purple);">2 คน</b> เพื่อแต่งตั้งเป็นอนุกรรมการฯ พร้อมกรอกเบอร์โทรศัพท์ (10 หลัก):</p>
           
-          <div class="students-grid" id="studentsGrid">
-            <!-- Dynamic student cards -->
-          </div>
+          <div class="students-grid" id="studentsGrid"></div>
 
           <button id="btnSubmit" class="btn-submit" onclick="submitSelection()" disabled>บันทึกข้อมูลอนุกรรมการ (เลือกแล้ว 0/2 คน)</button>
         </div>
       </div>
     </div>
 
-    <!-- Registered Summary Table Panel -->
+    <!-- สรุปข้อมูล -->
     <div class="card-panel">
       <h3 style="color: var(--primary-purple); margin-bottom: 12px; font-size: 1.1rem; border-left: 4px solid var(--gold-accent); padding-left: 10px;">สรุปการลงทะเบียนอนุกรรมการฯ แต่ละระดับชั้น</h3>
       <div class="table-container">
@@ -550,7 +537,7 @@
 
   </div>
 
-  <!-- Login Modal -->
+  <!-- Modal ล็อกอิน -->
   <div id="loginModal" class="modal-overlay">
     <div class="modal-card">
       <h3>เลือกวิธีเข้าสู่ระบบ</h3>
@@ -574,23 +561,21 @@
 
       <div class="modal-btns">
         <button class="btn-secondary" onclick="closeLoginModal()">ยกเลิก</button>
-        <button class="btn-primary" onclick="submitEmailLogin()">ตกลง</button>
+        <button id="btnSubmitEmail" class="btn-primary" onclick="submitEmailLogin()">ตกลง</button>
       </div>
     </div>
   </div>
 
-  <!-- Footer -->
   <footer>
     <p>© AnuNACC – OBEC - JUNIOR REGIS 2026 ALLRIGHT RESERVED</p>
     <p><a href="https://www.instagram.com/big_chissanucha_pk?igsh=MWNvZGJydTk1cGJh" target="_blank" rel="noopener noreferrer">Dev_Chissanucha Fadsura</a></p>
   </footer>
 
   <script>
-    // 1. Supabase Setup
     const SUPABASE_URL = 'https://fsyqijfwjdgembmfkfwy.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_4HzhTgG5X5rLAZJ9h7i-fA_vJd6-iZZ';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzeXFpamZ3amRnZW1ibWZrZnd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMjIzNzEsImV4cCI6MjEwMTU5ODM3MX0.2qH_fzZT-5SFUkzLk6qh74N2S5BH9np01ucMC0eizBg';
+    
+    let supabaseClient = null;
     let currentLoginInfo = null;
     let selectedStudents = []; 
     let currentClassStudents = [];
@@ -598,89 +583,128 @@
     let targetClass = '';
 
     window.addEventListener('DOMContentLoaded', async () => {
-      await checkAuthSession();
-      await loadRegisSummary();
+      try {
+        if (window.supabase && typeof window.supabase.createClient === 'function') {
+          supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } else {
+          console.error("Supabase CDN script fail.");
+        }
+        
+        await checkAuthSession();
+        if (supabaseClient) {
+           await loadRegisSummary();
+        }
+      } catch (err) {
+        console.error("Initialization error:", err);
+      }
     });
 
-    // 2. Modal Controls
     function openLoginModal() {
-      document.getElementById('loginModal').style.display = 'flex';
-      document.getElementById('modalEmailInput').focus();
+      try {
+        document.getElementById('loginModal').style.display = 'flex';
+        setTimeout(() => {
+          document.getElementById('modalEmailInput').focus();
+        }, 100);
+      } catch (e) {
+        alert("ไม่สามารถเปิดหน้าต่างเข้าสู่ระบบได้ โปรดรีเฟรชหน้าเว็บ (F5)");
+        console.error(e);
+      }
     }
 
     function closeLoginModal() {
       document.getElementById('loginModal').style.display = 'none';
     }
 
-    // 3. Login Implementations
     async function loginWithGoogleOAuth() {
+      if (!supabaseClient) return alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
       try {
-        const { error } = await supabase.auth.signInWithOAuth({
+        const { error } = await supabaseClient.auth.signInWithOAuth({
           provider: 'google',
-          options: {
-            redirectTo: window.location.href
-          }
+          options: { redirectTo: window.location.href }
         });
         if (error) {
-          alert('Google OAuth ยังไม่ถูกเปิดใช้งานบน Supabase Dashboard\nระบบจะให้ท่านระบุ E-mail เพื่อเข้าใช้งานแทนครับ');
+          alert('Google OAuth Error: ' + error.message + '\n\nกรุณาระบุ E-mail ในช่องด้านล่างแทนครับ');
         }
       } catch (err) {
-        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ Google OAuth: ' + err.message);
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ Google: ' + err.message);
       }
     }
 
     async function submitEmailLogin() {
+      if (!supabaseClient) return alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
       const email = document.getElementById('modalEmailInput').value.trim();
       if (!email) {
         alert('กรุณากรอกอีเมลก่อนกดตกลง');
         return;
       }
-      closeLoginModal();
+      
+      const btn = document.getElementById('btnSubmitEmail');
+      btn.innerText = "กำลังตรวจสอบ...";
+      btn.disabled = true;
+
       await processUserByEmail(email);
+
+      btn.innerText = "ตกลง";
+      btn.disabled = false;
     }
 
     async function logout() {
-      localStorage.removeItem('user_email_session');
-      try { await supabase.auth.signOut(); } catch(e){}
+      try { localStorage.removeItem('user_email_session'); } catch(e){}
+      if (supabaseClient) {
+        try { await supabaseClient.auth.signOut(); } catch(e){}
+      }
       window.location.reload();
     }
 
     async function checkAuthSession() {
-      // Check Supabase session first
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session && session.user && session.user.email) {
-          await processUserByEmail(session.user.email);
-          return;
-        }
-      } catch(e) {}
+      let activeEmail = null;
+      
+      if (supabaseClient) {
+        try {
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          if (session && session.user && session.user.email) {
+            activeEmail = session.user.email;
+          }
+        } catch(e) { console.warn("Supabase session check skipped:", e); }
+      }
 
-      // Check Saved Session
-      const savedEmail = localStorage.getItem('user_email_session');
-      if (savedEmail) {
-        await processUserByEmail(savedEmail);
+      if (!activeEmail) {
+        try {
+          activeEmail = localStorage.getItem('user_email_session');
+        } catch(e) { console.warn("LocalStorage not available:", e); }
+      }
+
+      if (activeEmail && supabaseClient) {
+        await processUserByEmail(activeEmail);
       } else {
         document.getElementById('loginSection').style.display = 'block';
         document.getElementById('appSection').style.display = 'none';
       }
     }
 
-    // 4. Fetch User from "login" Sheet
     async function processUserByEmail(email) {
+      if (!supabaseClient) return;
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from('login')
           .select('*')
           .eq('E - mail', email)
           .maybeSingle();
 
-        if (error || !data) {
-          alert(`ไม่พบสิทธิ์การเข้าใช้งานสำหรับอีเมล: ${email}\nกรุณาตรวจสอบว่าอีเมลตรงกับในตาราง 'login' ช่อง 'E - mail'`);
+        if (error) {
+          alert(`เกิดปัญหาดึงข้อมูล 'login': ${error.message}`);
           logout();
           return;
         }
 
-        localStorage.setItem('user_email_session', email);
+        if (!data) {
+          alert(`ไม่พบสิทธิ์การเข้าใช้งานสำหรับอีเมล:\n"${email}"\nกรุณาตรวจสอบว่าอีเมลตรงกับในระบบ`);
+          logout();
+          return;
+        }
+
+        closeLoginModal();
+        try { localStorage.setItem('user_email_session', email); } catch(e){}
         currentLoginInfo = data;
 
         document.getElementById('loginSection').style.display = 'none';
@@ -688,28 +712,28 @@
 
         const teacherName = data['Name'];
         const teacherClass = data['Class'];
+        document.getElementById('teacherName').innerText = teacherName || '-';
 
-        document.getElementById('teacherName').innerText = teacherName;
-
-        // "ป.ป.ช.สพฐ.น้อย" condition to view/select any class
         if (teacherName === 'ป.ป.ช.สพฐ.น้อย') {
           isAdmin = true;
           await setupAdminClassFilter();
         } else {
           isAdmin = false;
           targetClass = teacherClass;
-          document.getElementById('teacherClassDisplay').innerText = targetClass;
+          document.getElementById('teacherClassDisplay').innerText = targetClass || 'ไม่ได้ระบุชั้น';
           await processClassRegistration(targetClass);
         }
-
       } catch (err) {
         console.error('Error fetching user info:', err);
-        alert('เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้');
+        alert('เกิดข้อผิดพลาดในการตรวจสอบผู้ใช้: ' + err.message);
+        closeLoginModal();
       }
     }
 
     async function setupAdminClassFilter() {
-      const { data, error } = await supabase.from('data').select('Class');
+      const { data, error } = await supabaseClient.from('data').select('Class');
+      if (error) return;
+
       let classList = [];
       if (data) {
         classList = [...new Set(data.map(item => item['Class']))].filter(Boolean).sort((a, b) => 
@@ -736,12 +760,13 @@
       await processClassRegistration(targetClass);
     }
 
-    // 5. Class Logic
     async function processClassRegistration(className) {
       selectedStudents = [];
       updateSubmitButton();
 
-      const { data: regisData } = await supabase
+      if (!className || !supabaseClient) return;
+
+      const { data: regisData, error: regisError } = await supabaseClient
         .from('regis')
         .select('*')
         .eq('Class', className);
@@ -751,7 +776,7 @@
 
       if (regisData && regisData.length > 0) {
         alertBox.style.display = 'block';
-        alertBox.innerText = `ระดับชั้น ${className} ได้เคยทำการลงทะเบียนอนุกรรมการเรียบร้อยแล้ว ไม่สามารถลงทะเบียนซ้ำได้`;
+        alertBox.innerText = `ระดับชั้น ${className} ได้ทำการลงทะเบียนอนุกรรมการเรียบร้อยแล้ว`;
         selectionArea.style.display = 'none';
       } else {
         alertBox.style.display = 'none';
@@ -760,18 +785,21 @@
       }
     }
 
-    // 6. Load Student List from "data" Sheet
     async function loadStudentsForClass(className) {
       const container = document.getElementById('studentsGrid');
       container.innerHTML = '<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">กำลังโหลดรายชื่อนักเรียน...</p>';
 
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('data')
         .select('*')
         .eq('Class', className)
         .order('No.', { ascending: true });
 
-      if (error || !data || data.length === 0) {
+      if (error) {
+        container.innerHTML = `<p style="color:#E53E3E; text-align:center; grid-column:1/-1;">โหลดข้อมูลไม่สำเร็จ: ${error.message}</p>`;
+        return;
+      }
+      if (!data || data.length === 0) {
         container.innerHTML = '<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">ไม่พบข้อมูลนักเรียนในระดับชั้นนี้</p>';
         return;
       }
@@ -788,11 +816,11 @@
         card.onclick = (e) => toggleStudentSelect(student, e);
 
         card.innerHTML = `
-          <img src="${photoUrl}" class="student-photo" alt="ภาพนักเรียน" onerror="this.src='https://via.placeholder.com/70x85?text=No+Photo'">
+          <img src="${photoUrl}" class="student-photo" alt="ภาพ" onerror="this.src='https://via.placeholder.com/70x85?text=No+Photo'">
           <div class="student-details">
             <span class="name">${student['Name'] || '-'}</span>
             <span>เลขที่: ${student['No.'] || '-'} | รหัส: ${studentId || '-'}</span>
-            <input type="tel" id="tel-${studentId}" class="tel-input" placeholder="เบอร์โทรศัพท์ 10 หลัก" maxlength="10" onclick="event.stopPropagation()" oninput="validatePhoneInput(this, '${studentId}')">
+            <input type="tel" id="tel-${studentId}" class="tel-input" placeholder="เบอร์โทร 10 หลัก" maxlength="10" onclick="event.stopPropagation()" oninput="validatePhoneInput(this, '${studentId}')">
           </div>
         `;
         container.appendChild(card);
@@ -808,14 +836,10 @@
         selectedStudents.splice(index, 1);
         cardEl.classList.remove('selected');
       } else {
-        if (selectedStudents.length >= 2) {
-          alert('คุณสามารถเลือกอนุกรรมการได้สูงสุดเพียง 2 คนเท่านั้น');
-          return;
-        }
+        if (selectedStudents.length >= 2) return alert('เลือกได้สูงสุด 2 คนเท่านั้น');
         selectedStudents.push(student);
         cardEl.classList.add('selected');
       }
-
       updateSubmitButton();
     }
 
@@ -832,21 +856,17 @@
       let allPhonesValid = true;
       selectedStudents.forEach(st => {
         const telVal = document.getElementById(`tel-${st['Student ID']}`)?.value || '';
-        if (telVal.length !== 10) {
-          allPhonesValid = false;
-        }
+        if (telVal.length !== 10) allPhonesValid = false;
       });
-
-      if (count === 2 && allPhonesValid) {
-        btn.disabled = false;
-      } else {
-        btn.disabled = true;
-      }
+      btn.disabled = !(count === 2 && allPhonesValid);
     }
 
-    // 7. Submit to "regis" Sheet
     async function submitSelection() {
-      if (selectedStudents.length !== 2) return;
+      if (selectedStudents.length !== 2 || !supabaseClient) return;
+      
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true;
+      btn.innerText = "กำลังบันทึกข้อมูล...";
 
       const teacherRegisName = currentLoginInfo['Name'];
       const timestamp = new Date().toISOString();
@@ -854,7 +874,6 @@
       const insertPayload = selectedStudents.map(student => {
         const studentId = student['Student ID'];
         const telVal = document.getElementById(`tel-${studentId}`).value;
-
         return {
           'Teacher regis': teacherRegisName,
           'Class': targetClass,
@@ -866,10 +885,11 @@
         };
       });
 
-      const { data, error } = await supabase.from('regis').insert(insertPayload);
-
+      const { error } = await supabaseClient.from('regis').insert(insertPayload);
       if (error) {
         alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
+        btn.disabled = false;
+        btn.innerText = `บันทึกข้อมูลอนุกรรมการ (เลือกแล้ว 2/2 คน)`;
       } else {
         alert('บันทึกข้อมูลอนุกรรมการเรียบร้อยแล้ว!');
         await processClassRegistration(targetClass);
@@ -877,15 +897,17 @@
       }
     }
 
-    // 8. Load Summary Table
     async function loadRegisSummary() {
+      if (!supabaseClient) return;
       const tableBody = document.getElementById('regisTableBody');
 
-      const { data, error } = await supabase
-        .from('regis')
-        .select('*');
+      const { data, error } = await supabaseClient.from('regis').select('*');
 
-      if (error || !data || data.length === 0) {
+      if (error) {
+        tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#E53E3E;">ไม่สามารถดึงข้อมูลได้: ${error.message}</td></tr>`;
+        return;
+      }
+      if (!data || data.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">ยังไม่มีข้อมูลการลงทะเบียน</td></tr>';
         return;
       }
@@ -897,21 +919,12 @@
         groupedByClass[cls].push(row);
       });
 
-      const sortedClasses = Object.keys(groupedByClass).sort((a, b) => 
-        a.localeCompare(b, 'th', { numeric: true })
-      );
+      const sortedClasses = Object.keys(groupedByClass).sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
 
       let html = '';
-
       sortedClasses.forEach(cls => {
-        html += `
-          <tr class="class-header-row">
-            <td colspan="4">ระดับชั้น ${cls}</td>
-          </tr>
-        `;
-
+        html += `<tr class="class-header-row"><td colspan="4">ระดับชั้น ${cls}</td></tr>`;
         const students = groupedByClass[cls].sort((a, b) => Number(a['No.']) - Number(b['No.']));
-
         students.forEach(st => {
           html += `
             <tr>
@@ -923,7 +936,6 @@
           `;
         });
       });
-
       tableBody.innerHTML = html;
     }
   </script>
