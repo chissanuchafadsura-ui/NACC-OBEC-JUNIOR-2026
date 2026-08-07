@@ -562,6 +562,22 @@
       document.getElementById('loginModal').style.display = 'none';
     }
 
+    // ฟังก์ชันอเนกประสงค์ดึงค่าฟิลด์จาก object โดยไม่สนใจอักขระพิเศษหรือชื่อคอลัมน์เล็ก/ใหญ่
+    function getRowField(row, possibleKeys) {
+      if (!row) return '';
+      for (const k of possibleKeys) {
+        if (row[k] !== undefined && row[k] !== null) return String(row[k]);
+      }
+      const rowKeys = Object.keys(row);
+      for (const pk of possibleKeys) {
+        const foundKey = rowKeys.find(rk => rk.trim().toLowerCase() === pk.trim().toLowerCase());
+        if (foundKey && row[foundKey] !== undefined && row[foundKey] !== null) {
+          return String(row[foundKey]);
+        }
+      }
+      return '';
+    }
+
     async function submitEmailLogin() {
       if (!supabaseClient) return alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
       const email = document.getElementById('modalEmailInput').value.trim();
@@ -603,12 +619,21 @@
       }
     }
 
-    // ฟังก์ชันค้นหาข้อมูลผู้ใช้ในตาราง login แบบปลอดภัย
+    // ฟังก์ชันค้นหาข้อมูลผู้ใช้ในตาราง login ตรวจจับทุกคอลัมน์แบบยืดหยุ่น
     async function fetchUserRow(email) {
       if (!supabaseClient) return null;
 
-      // วิธีที่ 1: ดึงทุกแถวใน login มาเปรียบเทียบอีเมลใน JavaScript (ปลอดภัยจาก Syntax Error เรื่องเว้นวรรคคอลัมน์)
-      const { data: allUsers, error } = await supabaseClient.from('login').select('*');
+      const cleanEmail = email.trim().toLowerCase();
+
+      let { data: allUsers, error } = await supabaseClient.from('login').select('*');
+      if (error || !allUsers || allUsers.length === 0) {
+        const res2 = await supabaseClient.from('Login').select('*');
+        if (res2.data && res2.data.length > 0) {
+          allUsers = res2.data;
+          error = null;
+        }
+      }
+
       if (error) {
         console.error("Login Query Error:", error);
         return { error };
@@ -616,9 +641,13 @@
 
       if (allUsers && allUsers.length > 0) {
         const matched = allUsers.find(row => {
-          // ตรวจสอบคอลัมน์ "E - mail", "E-mail", "email", "Name", ฯลฯ
-          const rowEmail = row['E - mail'] || row['E-mail'] || row['email'] || row['Email'] || '';
-          return rowEmail.trim().toLowerCase() === email.trim().toLowerCase();
+          for (const key of Object.keys(row)) {
+            const val = String(row[key] || '').trim().toLowerCase();
+            if (val === cleanEmail) {
+              return true;
+            }
+          }
+          return false;
         });
         return { data: matched };
       }
@@ -631,15 +660,15 @@
       try {
         const result = await fetchUserRow(email);
 
-        if (result.error) {
+        if (result && result.error) {
           alert(`⚠️ ไม่สามารถดึงข้อมูลจากตาราง login ได้:\n${result.error.message}`);
           return;
         }
 
-        const data = result.data;
+        const data = result ? result.data : null;
 
         if (!data) {
-          alert(`❌ ไม่พบอีเมล "${email}" ในตาราง 'login'!\n\nกรุณาตรวจสอบว่าอีเมลตรงกับที่บันทึกไว้ในช่อง 'E - mail' ของตาราง 'login' หรือไม่`);
+          alert(`❌ ไม่พบอีเมล "${email}" ในตาราง 'login'!\n\nกรุณาตรวจสอบว่าใส่อีเมลตรงกับที่บันทึกไว้ในตาราง 'login' หรือไม่`);
           return;
         }
 
@@ -650,8 +679,8 @@
         document.getElementById('loginSection').style.display = 'none';
         document.getElementById('appSection').style.display = 'block';
 
-        const teacherName = data['Name'] || data['name'];
-        const teacherClass = data['Class'] || data['class'];
+        const teacherName = getRowField(data, ['Name', 'name', 'Teacher regis', 'ชื่อ']);
+        const teacherClass = getRowField(data, ['Class', 'class', 'ระดับชั้น', 'ชั้น']);
         document.getElementById('teacherName').innerText = teacherName || '-';
 
         if (teacherName === 'ป.ป.ช.สพฐ.น้อย') {
@@ -670,7 +699,12 @@
     }
 
     async function setupAdminClassFilter() {
-      const { data, error } = await supabaseClient.from('data').select('Class');
+      let { data, error } = await supabaseClient.from('data').select('*');
+      if (error || !data) {
+        const res2 = await supabaseClient.from('Data').select('*');
+        data = res2.data;
+        error = res2.error;
+      }
       if (error) {
         alert(`เกิดปัญหาดึงข้อมูลตาราง 'data': ${error.message}`);
         return;
@@ -678,7 +712,7 @@
 
       let classList = [];
       if (data) {
-        classList = [...new Set(data.map(item => item['Class'] || item['class']))].filter(Boolean).sort((a, b) => 
+        classList = [...new Set(data.map(item => getRowField(item, ['Class', 'class', 'ระดับชั้น', 'ชั้น'])))].filter(Boolean).sort((a, b) => 
           a.localeCompare(b, 'th', { numeric: true })
         );
       }
@@ -708,14 +742,23 @@
 
       if (!className || !supabaseClient) return;
 
-      const { data: regisData, error: regisError } = await supabaseClient
-        .from('regis')
-        .select('*')
-        .eq('Class', className);
-
-      if (regisError) {
-        console.error("Regis Error:", regisError);
+      let { data: allRegis, error: regisError } = await supabaseClient.from('regis').select('*');
+      if (regisError || !allRegis) {
+        const res2 = await supabaseClient.from('Regis').select('*');
+        if (res2.data) {
+          allRegis = res2.data;
+          regisError = null;
+        }
       }
+
+      const targetRoom = extractRoomNumber(className);
+      const regisData = (allRegis || []).filter(r => {
+        const regClass = getRowField(r, ['Class', 'class', 'ระดับชั้น']);
+        if (regClass.trim().toLowerCase() === className.trim().toLowerCase()) return true;
+        const regRoom = extractRoomNumber(regClass);
+        if (targetRoom && regRoom && targetRoom === regRoom) return true;
+        return false;
+      });
 
       const alertBox = document.getElementById('statusAlert');
       const selectionArea = document.getElementById('selectionFormArea');
@@ -742,23 +785,13 @@
       const container = document.getElementById('studentsGrid');
       container.innerHTML = '<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">กำลังโหลดรายชื่อนักเรียน...</p>';
 
-      // ค้นหาแบบตรงตัวก่อน
-      let { data, error } = await supabaseClient
-        .from('data')
-        .select('*')
-        .eq('Class', className);
+      let { data: allStudents, error } = await supabaseClient.from('data').select('*');
 
-      // หากไม่เจอข้อมูล ให้ลองค้นหาจากเลขห้องเรียน (เช่น "1/1")
-      if ((!data || data.length === 0) && !error) {
-        const roomNo = extractRoomNumber(className);
-        if (roomNo) {
-          const res2 = await supabaseClient
-            .from('data')
-            .select('*')
-            .ilike('Class', `%${roomNo}%`);
-          if (res2.data && res2.data.length > 0) {
-            data = res2.data;
-          }
+      if (error || !allStudents) {
+        const res2 = await supabaseClient.from('Data').select('*');
+        if (res2.data) {
+          allStudents = res2.data;
+          error = null;
         }
       }
 
@@ -766,22 +799,38 @@
         container.innerHTML = `<p style="color:#E53E3E; text-align:center; grid-column:1/-1;">โหลดข้อมูลไม่สำเร็จ: ${error.message}</p>`;
         return;
       }
-      if (!data || data.length === 0) {
+
+      const targetRoom = extractRoomNumber(className);
+
+      const filtered = (allStudents || []).filter(student => {
+        const studentClass = getRowField(student, ['Class', 'class', 'ระดับชั้น', 'ชั้น']);
+        if (!studentClass) return false;
+        if (studentClass.trim().toLowerCase() === className.trim().toLowerCase()) return true;
+        
+        const studentRoom = extractRoomNumber(studentClass);
+        if (targetRoom && studentRoom && targetRoom === studentRoom) return true;
+        return false;
+      });
+
+      if (filtered.length === 0) {
         container.innerHTML = `<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">ไม่พบข้อมูลนักเรียนในระดับชั้น "${className}"</p>`;
         return;
       }
 
-      currentClassStudents = data;
+      currentClassStudents = filtered;
       container.innerHTML = '';
 
-      // เรียงลำดับตามเลขที่
-      data.sort((a, b) => Number(a['No.'] || a['no'] || 0) - Number(b['No.'] || b['no'] || 0));
+      filtered.sort((a, b) => {
+        const noA = Number(getRowField(a, ['No.', 'no', 'No', 'เลขที่'])) || 0;
+        const noB = Number(getRowField(b, ['No.', 'no', 'No', 'เลขที่'])) || 0;
+        return noA - noB;
+      });
 
-      data.forEach(student => {
-        const studentId = student['Student ID'] || student['student_id'];
-        const photoUrl = student['Photo'] || student['photo'] || 'https://via.placeholder.com/70x85?text=No+Photo';
-        const studentName = student['Name'] || student['name'];
-        const studentNo = student['No.'] || student['no'];
+      filtered.forEach(student => {
+        const studentId = getRowField(student, ['Student ID', 'student_id', 'Student_ID', 'รหัสนักเรียน', 'id']);
+        const photoUrl = getRowField(student, ['Photo', 'photo', 'รูปภาพ', 'ภาพ']) || 'https://via.placeholder.com/70x85?text=No+Photo';
+        const studentName = getRowField(student, ['Name', 'name', 'ชื่อ-สกุล', 'ชื่อ']);
+        const studentNo = getRowField(student, ['No.', 'no', 'No', 'เลขที่']);
 
         const card = document.createElement('div');
         card.className = 'student-card';
@@ -801,8 +850,8 @@
     }
 
     function toggleStudentSelect(student, event) {
-      const studentId = student['Student ID'] || student['student_id'];
-      const index = selectedStudents.findIndex(s => (s['Student ID'] || s['student_id']) === studentId);
+      const studentId = getRowField(student, ['Student ID', 'student_id', 'Student_ID', 'รหัสนักเรียน', 'id']);
+      const index = selectedStudents.findIndex(s => getRowField(s, ['Student ID', 'student_id', 'Student_ID', 'รหัสนักเรียน', 'id']) === studentId);
       const cardEl = document.getElementById(`card-${studentId}`);
 
       if (index > -1) {
@@ -828,7 +877,7 @@
 
       let allPhonesValid = true;
       selectedStudents.forEach(st => {
-        const id = st['Student ID'] || st['student_id'];
+        const id = getRowField(st, ['Student ID', 'student_id', 'Student_ID', 'รหัสนักเรียน', 'id']);
         const telVal = document.getElementById(`tel-${id}`)?.value || '';
         if (telVal.length !== 10) allPhonesValid = false;
       });
@@ -842,13 +891,13 @@
       btn.disabled = true;
       btn.innerText = "กำลังบันทึกข้อมูล...";
 
-      const teacherRegisName = currentLoginInfo['Name'] || currentLoginInfo['name'];
+      const teacherRegisName = getRowField(currentLoginInfo, ['Name', 'name', 'Teacher regis', 'ชื่อ']);
       const timestamp = new Date().toISOString();
 
       const insertPayload = selectedStudents.map(student => {
-        const studentId = student['Student ID'] || student['student_id'];
-        const studentName = student['Name'] || student['name'];
-        const studentNo = student['No.'] || student['no'];
+        const studentId = getRowField(student, ['Student ID', 'student_id', 'Student_ID', 'รหัสนักเรียน', 'id']);
+        const studentName = getRowField(student, ['Name', 'name', 'ชื่อ-สกุล', 'ชื่อ']);
+        const studentNo = getRowField(student, ['No.', 'no', 'No', 'เลขที่']);
         const telVal = document.getElementById(`tel-${studentId}`).value;
 
         return {
@@ -878,7 +927,14 @@
       if (!supabaseClient) return;
       const tableBody = document.getElementById('regisTableBody');
 
-      const { data, error } = await supabaseClient.from('regis').select('*');
+      let { data, error } = await supabaseClient.from('regis').select('*');
+      if (error || !data) {
+        const res2 = await supabaseClient.from('Regis').select('*');
+        if (res2.data) {
+          data = res2.data;
+          error = null;
+        }
+      }
 
       if (error) {
         tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#E53E3E;">ไม่สามารถดึงข้อมูลสรุปได้: ${error.message}</td></tr>`;
@@ -891,7 +947,7 @@
 
       const groupedByClass = {};
       data.forEach(row => {
-        const cls = row['Class'] || row['class'] || 'ไม่ระบุชั้น';
+        const cls = getRowField(row, ['Class', 'class', 'ระดับชั้น']) || 'ไม่ระบุชั้น';
         if (!groupedByClass[cls]) groupedByClass[cls] = [];
         groupedByClass[cls].push(row);
       });
@@ -901,14 +957,14 @@
       let html = '';
       sortedClasses.forEach(cls => {
         html += `<tr class="class-header-row"><td colspan="4">ระดับชั้น ${cls}</td></tr>`;
-        const students = groupedByClass[cls].sort((a, b) => Number(a['No.'] || a['no'] || 0) - Number(b['No.'] || b['no'] || 0));
+        const students = groupedByClass[cls].sort((a, b) => Number(getRowField(a, ['No.', 'no', 'เลขที่'])) - Number(getRowField(b, ['No.', 'no', 'เลขที่'])));
         students.forEach(st => {
           html += `
             <tr>
-              <td>${st['No.'] || st['no'] || '-'}</td>
-              <td>${st['Student ID'] || st['student_id'] || '-'}</td>
-              <td>${st['Name Student'] || st['name_student'] || '-'}</td>
-              <td><span class="teacher-small">${st['Teacher regis'] || st['teacher_regis'] || '-'}</span></td>
+              <td>${getRowField(st, ['No.', 'no', 'เลขที่']) || '-'}</td>
+              <td>${getRowField(st, ['Student ID', 'student_id', 'รหัสนักเรียน']) || '-'}</td>
+              <td>${getRowField(st, ['Name Student', 'name_student', 'Name', 'ชื่อ']) || '-'}</td>
+              <td><span class="teacher-small">${getRowField(st, ['Teacher regis', 'teacher_regis', 'ผู้ส่งข้อมูล']) || '-'}</span></td>
             </tr>
           `;
         });
