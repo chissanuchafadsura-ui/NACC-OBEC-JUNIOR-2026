@@ -5,12 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบคัดเลือกอนุกรรมการ ป.ป.ช.สพฐ.น้อย ปีการศึกษา 2569</title>
   
+  <!-- Favicon -->
   <link rel="shortcut icon" href="https://score.phukhieo.ac.th/helper/img/pklogo.png" type="image/x-icon">
   
+  <!-- Font Prompt -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
+  <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -19,7 +22,7 @@
       --secondary-purple: #6B2D5C;
       --gold-accent: #D4AF37;
       --gold-hover: #B8860B;
-      --light-bg: #FAFAFD;
+      --light-bg: #F8F9FA;
       --text-dark: #2C3E50;
       --text-muted: #6C757D;
       --border-color: #E2E8F0;
@@ -51,89 +54,94 @@
       flex: 1;
     }
 
-    /* Header & Logos */
+    /* Header Area - White Background Style */
     header {
       text-align: center;
-      padding: 20px 10px;
-      background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
-      color: white;
+      padding: 25px 15px;
+      background: #FFFFFF;
+      color: var(--primary-purple);
       border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(74, 21, 75, 0.15);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
       margin-bottom: 25px;
       border-bottom: 4px solid var(--gold-accent);
+      border-top: 1px solid var(--border-color);
     }
 
     .logo-group {
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
       flex-wrap: wrap;
-      margin-bottom: 15px;
+      margin-bottom: 18px;
+      padding: 10px;
     }
 
     .logo-group img {
-      height: 60px;
+      height: 65px;
       width: auto;
       object-fit: contain;
-      /* โลโก้ไม่มีขอบ มีไฮไลท์ฟุ้งขาว 50% */
       border: none !important;
       outline: none !important;
-      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+      filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.8)) drop-shadow(0 2px 4px rgba(0,0,0,0.08));
       transition: transform 0.3s ease;
     }
 
     .logo-group img:hover {
-      transform: scale(1.05);
+      transform: scale(1.08);
     }
 
     header h1 {
       font-size: 1.4rem;
-      font-weight: 600;
-      color: #FFFFFF;
-      margin-bottom: 5px;
+      font-weight: 700;
+      color: var(--primary-purple);
+      margin-bottom: 6px;
     }
 
     header h2 {
       font-size: 1.1rem;
-      font-weight: 400;
-      color: var(--gold-accent);
+      font-weight: 500;
+      color: var(--gold-hover);
     }
 
-    /* Auth & User Info Section */
+    /* Panels & Cards */
     .card-panel {
-      background: white;
+      background: #FFFFFF;
       border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
       margin-bottom: 25px;
       border: 1px solid var(--border-color);
     }
 
+    /* Login Button */
     .btn-login {
-      display: block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
       width: 100%;
-      max-width: 450px;
+      max-width: 500px;
       margin: 10px auto;
-      padding: 12px 24px;
-      background: var(--gold-accent);
-      color: var(--primary-purple);
+      padding: 14px 28px;
+      background: linear-gradient(135deg, var(--gold-accent), var(--gold-hover));
+      color: #FFFFFF;
       font-size: 1rem;
       font-weight: 600;
       border: none;
       border-radius: 50px;
       cursor: pointer;
-      box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3);
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.35);
       transition: all 0.3s ease;
       text-align: center;
     }
 
     .btn-login:hover {
-      background: var(--gold-hover);
-      color: white;
       transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(212, 175, 55, 0.45);
     }
 
+    /* User Information Header */
     .user-info {
       display: flex;
       flex-wrap: wrap;
@@ -152,7 +160,7 @@
 
     .user-info span {
       color: var(--primary-purple);
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .class-filter-select {
@@ -160,13 +168,16 @@
       border-radius: 6px;
       border: 1px solid var(--border-color);
       font-size: 0.95rem;
+      color: var(--primary-purple);
+      font-weight: 600;
+      background: #F8F9FA;
     }
 
-    /* Student Selection Section */
+    /* Students Grid */
     .students-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 16px;
       margin-top: 15px;
     }
 
@@ -184,14 +195,14 @@
     }
 
     .student-card:hover {
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      border-color: #CBD5E1;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
 
-    /* เมื่อกดเลือกจะขึ้นกรอบสีเขียว */
     .student-card.selected {
       border-color: var(--selected-green) !important;
       background-color: #F0FDF4;
-      box-shadow: 0 0 12px rgba(46, 204, 113, 0.3);
+      box-shadow: 0 0 12px rgba(46, 204, 113, 0.25);
     }
 
     .student-photo {
@@ -202,13 +213,14 @@
       margin-right: 12px;
       background-color: #E2E8F0;
       flex-shrink: 0;
+      border: 1px solid var(--border-color);
     }
 
     .student-details {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
       font-size: 0.9rem;
     }
 
@@ -253,9 +265,10 @@
     .btn-submit:disabled {
       background: var(--text-muted);
       cursor: not-allowed;
+      opacity: 0.7;
     }
 
-    /* Table Section */
+    /* Summary Table */
     .table-container {
       overflow-x: auto;
       margin-top: 15px;
@@ -298,13 +311,141 @@
     }
 
     .alert-box {
-      padding: 12px;
+      padding: 12px 16px;
       border-radius: 8px;
       background-color: #FEF3C7;
       color: #92400E;
       font-size: 0.9rem;
       margin-bottom: 15px;
       display: none;
+      border: 1px solid #FCD34D;
+    }
+
+    /* Login Modal Options */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.55);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+      backdrop-filter: blur(3px);
+    }
+
+    .modal-card {
+      background: white;
+      border-radius: 16px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      text-align: center;
+    }
+
+    .modal-card h3 {
+      color: var(--primary-purple);
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+
+    .modal-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .btn-google-oauth {
+      width: 100%;
+      padding: 12px;
+      background: #4285F4;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 15px;
+      transition: background 0.2s ease;
+    }
+
+    .btn-google-oauth:hover {
+      background: #3367D6;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin: 15px 0;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .divider span {
+      padding: 0 10px;
+    }
+
+    .email-input-group {
+      text-align: left;
+    }
+
+    .email-input-group label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-dark);
+    }
+
+    .email-input-group input {
+      width: 100%;
+      padding: 10px 12px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .email-input-group input:focus {
+      border-color: var(--primary-purple);
+    }
+
+    .modal-btns {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .btn-secondary {
+      padding: 9px 18px;
+      background: #E2E8F0;
+      color: var(--text-dark);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      padding: 9px 18px;
+      background: var(--primary-purple);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
     }
 
     /* Footer */
@@ -315,7 +456,7 @@
       color: var(--text-muted);
       margin-top: auto;
       border-top: 1px solid var(--border-color);
-      background: white;
+      background: #FFFFFF;
     }
 
     footer a {
@@ -328,11 +469,10 @@
       text-decoration: underline;
     }
 
-    /* Responsive Adjustments */
     @media (max-width: 600px) {
       header h1 { font-size: 1.1rem; }
       header h2 { font-size: 0.9rem; }
-      .logo-group img { height: 45px; }
+      .logo-group img { height: 48px; }
       .students-grid { grid-template-columns: 1fr; }
     }
   </style>
@@ -340,47 +480,57 @@
 <body>
 
   <div class="container">
+    <!-- Header with White Background for Logos -->
     <header>
       <div class="logo-group">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Emblem_of_the_National_Anti-Corruption_Commission_Thailand.svg/960px-Emblem_of_the_National_Anti-Corruption_Commission_Thailand.svg.png" alt="NACC Logo">
-        <img src="https://www.kruchiangrai.net/wp-content/uploads/2024/02/%E0%B8%AA%E0%B8%9E%E0%B8%90.1-%E0%B8%82%E0%B8%AD%E0%B8%9A%E0%B8%82%E0%B8%B2%E0%B8%A7.webp" alt="OBEC Logo">
-        <img src="https://score.phukhieo.ac.th/helper/img/pklogo.png" alt="PK Logo">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmp0eh7_RSBKmHvK2EDeUUJRYIxCXHjYZNr2MDSJr0KSTBWauKtC8aFUnd&s=10" alt="Logo 4">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRyqP5dd2_-JXf02g8wFMy11ShZ5rEFvWlN315F4fu-u15imn4c3bOwvo&s=10" alt="Logo 5">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Emblem_of_the_National_Anti-Corruption_Commission_Thailand.svg/960px-Emblem_of_the_National_Anti-Corruption_Commission_Thailand.svg.png" alt="ตรา ป.ป.ช.">
+        <img src="https://www.kruchiangrai.net/wp-content/uploads/2024/02/%E0%B8%AA%E0%B8%9E%E0%B8%90.1-%E0%B8%82%E0%B8%AD%E0%B8%9A%E0%B8%82%E0%B8%B2%E0%B8%A7.webp" alt="ตรา สพฐ.">
+        <img src="https://score.phukhieo.ac.th/helper/img/pklogo.png" alt="ตรา โรงเรียนภูเขียว">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmp0eh7_RSBKmHvK2EDeUUJRYIxCXHjYZNr2MDSJr0KSTBWauKtC8aFUnd&s=10" alt="ตราสัญลักษณ์ 1">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRyqP5dd2_-JXf02g8wFMy11ShZ5rEFvWlN315F4fu-u15imn4c3bOwvo&s=10" alt="ตราสัญลักษณ์ 2">
       </div>
       <h1>ระบบคัดเลือกอนุกรรมการ ป.ป.ช.สพฐ.น้อย ปีการศึกษา 2569</h1>
       <h2>โรงเรียนภูเขียว สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาชัยภูมิ</h2>
     </header>
 
+    <!-- Main Dashboard Panel -->
     <div class="card-panel">
-      <div id="loginSection" style="text-align: center;">
-        <button class="btn-login" onclick="loginWithGoogle()">
+      <!-- Section 1: Non-logged in state -->
+      <div id="loginSection" style="text-align: center; padding: 15px 0;">
+        <button id="btnLogin" class="btn-login" onclick="openLoginModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C6.721,2,2,6.721,2,12.545S6.721,23.09,12.545,23.09c6.301,0,10.455-4.432,10.455-10.637c0-0.781-0.078-1.536-0.218-2.214H12.545z"/>
+          </svg>
           เข้าสู่ระบบ (เพื่อส่งข้อมูลอนุกรรมการ ป.ป.ช.สพฐ.น้อย)
         </button>
       </div>
 
+      <!-- Section 2: Logged in state -->
       <div id="appSection" style="display: none;">
         <div class="user-info">
           <p>ชื่อผู้กรอกข้อมูล : <span id="teacherName">-</span></p>
           <p>ระดับชั้น : <span id="teacherClassDisplay">-</span></p>
-          <button style="padding: 4px 10px; font-size: 0.8rem; background:#E53E3E; color:white; border:none; border-radius:4px; cursor:pointer;" onclick="logout()">ออกจากระบบ</button>
+          <button style="padding: 6px 12px; font-size: 0.85rem; background:#E53E3E; color:white; border:none; border-radius:6px; cursor:pointer;" onclick="logout()">ออกจากระบบ</button>
         </div>
 
         <div id="statusAlert" class="alert-box"></div>
 
+        <!-- Form for Student Selection -->
         <div id="selectionFormArea">
           <p style="font-weight: 500; margin-bottom: 10px;">กรุณาคลิกเลือกนักเรียนจำนวน <b style="color: var(--primary-purple);">2 คน</b> เพื่อแต่งตั้งเป็นอนุกรรมการฯ พร้อมกรอกเบอร์โทรศัพท์ (10 หลัก):</p>
           
           <div class="students-grid" id="studentsGrid">
-            </div>
+            <!-- Dynamic student cards -->
+          </div>
 
           <button id="btnSubmit" class="btn-submit" onclick="submitSelection()" disabled>บันทึกข้อมูลอนุกรรมการ (เลือกแล้ว 0/2 คน)</button>
         </div>
       </div>
     </div>
 
+    <!-- Registered Summary Table Panel -->
     <div class="card-panel">
-      <h3 style="color: var(--primary-purple); margin-bottom: 10px; font-size: 1.1rem;">สรุปการลงทะเบียนอนุกรรมการฯ แต่ละระดับชั้น</h3>
+      <h3 style="color: var(--primary-purple); margin-bottom: 12px; font-size: 1.1rem; border-left: 4px solid var(--gold-accent); padding-left: 10px;">สรุปการลงทะเบียนอนุกรรมการฯ แต่ละระดับชั้น</h3>
       <div class="table-container">
         <table id="regisTable">
           <thead>
@@ -400,81 +550,148 @@
 
   </div>
 
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal-overlay">
+    <div class="modal-card">
+      <h3>เลือกวิธีเข้าสู่ระบบ</h3>
+      <p>กรุณาใช้อีเมลโรงเรียนที่อยู่ในตาราง 'login' (ช่อง E - mail)</p>
+
+      <button class="btn-google-oauth" onclick="loginWithGoogleOAuth()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C6.721,2,2,6.721,2,12.545S6.721,23.09,12.545,23.09c6.301,0,10.455-4.432,10.455-10.637c0-0.781-0.078-1.536-0.218-2.214H12.545z"/>
+        </svg>
+        เข้าสู่ระบบด้วย Google Account
+      </button>
+
+      <div class="divider">
+        <span>หรือ กรอกอีเมลโดยตรง</span>
+      </div>
+
+      <div class="email-input-group">
+        <label for="modalEmailInput">Google E-mail โรงเรียน:</label>
+        <input type="email" id="modalEmailInput" placeholder="เช่น teacher@phukhieo.ac.th" onkeyup="if(event.key==='Enter') submitEmailLogin()">
+      </div>
+
+      <div class="modal-btns">
+        <button class="btn-secondary" onclick="closeLoginModal()">ยกเลิก</button>
+        <button class="btn-primary" onclick="submitEmailLogin()">ตกลง</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
   <footer>
-    <p>© AnuNACC – OBEC - JUNIOR REGIS SMT 2026 ALLRIGHT RESERVED</p>
+    <p>© AnuNACC – OBEC - JUNIOR REGIS 2026 ALLRIGHT RESERVED</p>
     <p><a href="https://www.instagram.com/big_chissanucha_pk?igsh=MWNvZGJydTk1cGJh" target="_blank" rel="noopener noreferrer">Dev_Chissanucha Fadsura</a></p>
   </footer>
 
   <script>
-    // 1. Initial Supabase Config
+    // 1. Supabase Setup
     const SUPABASE_URL = 'https://fsyqijfwjdgembmfkfwy.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_4HzhTgG5X5rLAZJ9h7i-fA_vJd6-iZZ';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let currentUser = null;
     let currentLoginInfo = null;
-    let selectedStudents = []; // Stores max 2 student IDs
+    let selectedStudents = []; 
     let currentClassStudents = [];
     let isAdmin = false;
     let targetClass = '';
 
-    // Initialize App
     window.addEventListener('DOMContentLoaded', async () => {
       await checkAuthSession();
       await loadRegisSummary();
     });
 
-    // 2. Google OAuth Authentication
-    async function loginWithGoogle() {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin + window.location.pathname
+    // 2. Modal Controls
+    function openLoginModal() {
+      document.getElementById('loginModal').style.display = 'flex';
+      document.getElementById('modalEmailInput').focus();
+    }
+
+    function closeLoginModal() {
+      document.getElementById('loginModal').style.display = 'none';
+    }
+
+    // 3. Login Implementations
+    async function loginWithGoogleOAuth() {
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.href
+          }
+        });
+        if (error) {
+          alert('Google OAuth ยังไม่ถูกเปิดใช้งานบน Supabase Dashboard\nระบบจะให้ท่านระบุ E-mail เพื่อเข้าใช้งานแทนครับ');
         }
-      });
-      if (error) alert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ: ' + error.message);
+      } catch (err) {
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ Google OAuth: ' + err.message);
+      }
+    }
+
+    async function submitEmailLogin() {
+      const email = document.getElementById('modalEmailInput').value.trim();
+      if (!email) {
+        alert('กรุณากรอกอีเมลก่อนกดตกลง');
+        return;
+      }
+      closeLoginModal();
+      await processUserByEmail(email);
     }
 
     async function logout() {
-      await supabase.auth.signOut();
+      localStorage.removeItem('user_email_session');
+      try { await supabase.auth.signOut(); } catch(e){}
       window.location.reload();
     }
 
     async function checkAuthSession() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && session.user) {
-        currentUser = session.user;
-        document.getElementById('loginSection').style.display = 'none';
-        document.getElementById('appSection').style.display = 'block';
-        await fetchUserInfo(currentUser.email);
+      // Check Supabase session first
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user && session.user.email) {
+          await processUserByEmail(session.user.email);
+          return;
+        }
+      } catch(e) {}
+
+      // Check Saved Session
+      const savedEmail = localStorage.getItem('user_email_session');
+      if (savedEmail) {
+        await processUserByEmail(savedEmail);
       } else {
         document.getElementById('loginSection').style.display = 'block';
         document.getElementById('appSection').style.display = 'none';
       }
     }
 
-    // 3. Fetch User Info from "login" Table
-    async function fetchUserInfo(email) {
+    // 4. Fetch User from "login" Sheet
+    async function processUserByEmail(email) {
       try {
         const { data, error } = await supabase
           .from('login')
           .select('*')
           .eq('E - mail', email)
-          .single();
+          .maybeSingle();
 
         if (error || !data) {
-          alert('สิทธิ์การเข้าใช้งานล้มเหลว: ไม่พบอีเมลนี้ในระบบสิทธิ์ผู้ใช้งาน (login)');
+          alert(`ไม่พบสิทธิ์การเข้าใช้งานสำหรับอีเมล: ${email}\nกรุณาตรวจสอบว่าอีเมลตรงกับในตาราง 'login' ช่อง 'E - mail'`);
           logout();
           return;
         }
 
+        localStorage.setItem('user_email_session', email);
         currentLoginInfo = data;
+
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('appSection').style.display = 'block';
+
         const teacherName = data['Name'];
         const teacherClass = data['Class'];
 
         document.getElementById('teacherName').innerText = teacherName;
 
-        // Check Admin condition: "ป.ป.ช.สพฐ.น้อย"
+        // "ป.ป.ช.สพฐ.น้อย" condition to view/select any class
         if (teacherName === 'ป.ป.ช.สพฐ.น้อย') {
           isAdmin = true;
           await setupAdminClassFilter();
@@ -484,23 +701,25 @@
           document.getElementById('teacherClassDisplay').innerText = targetClass;
           await processClassRegistration(targetClass);
         }
+
       } catch (err) {
         console.error('Error fetching user info:', err);
+        alert('เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้');
       }
     }
 
-    // Handle Admin Class Selector
     async function setupAdminClassFilter() {
-      // Get all distinct classes from data
       const { data, error } = await supabase.from('data').select('Class');
       let classList = [];
       if (data) {
-        classList = [...new Set(data.map(item => item['Class']))].filter(Boolean).sort();
+        classList = [...new Set(data.map(item => item['Class']))].filter(Boolean).sort((a, b) => 
+          a.localeCompare(b, 'th', { numeric: true })
+        );
       }
 
       let selectHtml = `<select id="adminClassSelect" class="class-filter-select" onchange="onAdminClassChange(this.value)">`;
       classList.forEach(cls => {
-        selectHtml += `<option value="${cls}">${cls}</option>`;
+        selectHtml += `<option value="${cls}">ระดับชั้น ${cls}</option>`;
       });
       selectHtml += `</select>`;
 
@@ -517,13 +736,12 @@
       await processClassRegistration(targetClass);
     }
 
-    // 4. Process Logic for specific class (Check if registered & Load data)
+    // 5. Class Logic
     async function processClassRegistration(className) {
       selectedStudents = [];
       updateSubmitButton();
 
-      // Check if class is already registered in "regis"
-      const { data: regisData, error: regisErr } = await supabase
+      const { data: regisData } = await supabase
         .from('regis')
         .select('*')
         .eq('Class', className);
@@ -542,10 +760,10 @@
       }
     }
 
-    // 5. Load Students from "data" Table
+    // 6. Load Student List from "data" Sheet
     async function loadStudentsForClass(className) {
       const container = document.getElementById('studentsGrid');
-      container.innerHTML = 'กำลังโหลดรายชื่อนักเรียน...';
+      container.innerHTML = '<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">กำลังโหลดรายชื่อนักเรียน...</p>';
 
       const { data, error } = await supabase
         .from('data')
@@ -554,7 +772,7 @@
         .order('No.', { ascending: true });
 
       if (error || !data || data.length === 0) {
-        container.innerHTML = '<p>ไม่พบข้อมูลนักเรียนในระดับชั้นนี้</p>';
+        container.innerHTML = '<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">ไม่พบข้อมูลนักเรียนในระดับชั้นนี้</p>';
         return;
       }
 
@@ -563,14 +781,14 @@
 
       data.forEach(student => {
         const studentId = student['Student ID'];
-        const photoUrl = student['Photo'] || 'https://via.placeholder.com/70x85?text=No+Image';
+        const photoUrl = student['Photo'] || 'https://via.placeholder.com/70x85?text=No+Photo';
         const card = document.createElement('div');
         card.className = 'student-card';
         card.id = `card-${studentId}`;
         card.onclick = (e) => toggleStudentSelect(student, e);
 
         card.innerHTML = `
-          <img src="${photoUrl}" class="student-photo" alt="ภาพนักเรียน" onerror="this.src='https://via.placeholder.com/70x85?text=No+Image'">
+          <img src="${photoUrl}" class="student-photo" alt="ภาพนักเรียน" onerror="this.src='https://via.placeholder.com/70x85?text=No+Photo'">
           <div class="student-details">
             <span class="name">${student['Name'] || '-'}</span>
             <span>เลขที่: ${student['No.'] || '-'} | รหัส: ${studentId || '-'}</span>
@@ -581,18 +799,15 @@
       });
     }
 
-    // Card Selection Logic (Max 2 students)
     function toggleStudentSelect(student, event) {
       const studentId = student['Student ID'];
       const index = selectedStudents.findIndex(s => s['Student ID'] === studentId);
       const cardEl = document.getElementById(`card-${studentId}`);
 
       if (index > -1) {
-        // Unselect
         selectedStudents.splice(index, 1);
         cardEl.classList.remove('selected');
       } else {
-        // Select if under limit
         if (selectedStudents.length >= 2) {
           alert('คุณสามารถเลือกอนุกรรมการได้สูงสุดเพียง 2 คนเท่านั้น');
           return;
@@ -614,7 +829,6 @@
       const count = selectedStudents.length;
       btn.innerText = `บันทึกข้อมูลอนุกรรมการ (เลือกแล้ว ${count}/2 คน)`;
 
-      // Check if phone numbers are filled
       let allPhonesValid = true;
       selectedStudents.forEach(st => {
         const telVal = document.getElementById(`tel-${st['Student ID']}`)?.value || '';
@@ -630,7 +844,7 @@
       }
     }
 
-    // 6. Submit Selection to "regis" Table
+    // 7. Submit to "regis" Sheet
     async function submitSelection() {
       if (selectedStudents.length !== 2) return;
 
@@ -663,7 +877,7 @@
       }
     }
 
-    // 7. Load Summary Table from "regis" Table
+    // 8. Load Summary Table
     async function loadRegisSummary() {
       const tableBody = document.getElementById('regisTableBody');
 
@@ -676,7 +890,6 @@
         return;
       }
 
-      // Group records by Class
       const groupedByClass = {};
       data.forEach(row => {
         const cls = row['Class'] || 'ไม่ระบุชั้น';
@@ -684,7 +897,6 @@
         groupedByClass[cls].push(row);
       });
 
-      // Sort classes ascending (e.g. ม.1/1 to ม.6/12)
       const sortedClasses = Object.keys(groupedByClass).sort((a, b) => 
         a.localeCompare(b, 'th', { numeric: true })
       );
@@ -692,14 +904,12 @@
       let html = '';
 
       sortedClasses.forEach(cls => {
-        // Header for Class Name
         html += `
           <tr class="class-header-row">
             <td colspan="4">ระดับชั้น ${cls}</td>
           </tr>
         `;
 
-        // Sort students by No. ascending
         const students = groupedByClass[cls].sort((a, b) => Number(a['No.']) - Number(b['No.']));
 
         students.forEach(st => {
