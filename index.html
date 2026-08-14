@@ -187,6 +187,11 @@
             background: #d4c5d9;
         }
 
+        .btn-secondary:hover .refresh-icon {
+            transform: rotate(180deg);
+            transition: transform 0.4s ease;
+        }
+
         /* --- Modal Popup for Login --- */
         .modal-overlay {
             display: none;
@@ -593,9 +598,16 @@
         <!-- ================= 1. Dashboard View ================= -->
         <div id="dashboard-view" class="active-view">
             <div style="text-align: center; margin-bottom: 25px;">
-                <button class="btn btn-gold" onclick="openLoginModal()">
+                <!-- กล่องแสดงเวลาเค้าดาวน์บนปุ่มเข้าสู่ระบบ -->
+                <div style="margin-bottom: 12px;">
+                    <div id="timer-badge" style="font-weight: 500; color: #501d43; background: #fff; display: inline-block; padding: 6px 18px; border-radius: 20px; border: 1.5px solid #ffd700; box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-size: 0.88rem;">
+                        <i class="fa-regular fa-clock" style="color: #e6b800; margin-right: 6px;"></i>
+                        <span id="countdown-text">กำลังคำนวณเวลาลงทะเบียน...</span>
+                    </div>
+                </div>
+                <button class="btn btn-gold" id="login-trigger-btn" onclick="openLoginModal()">
                     <i class="fa-solid fa-right-to-bracket"></i>
-                    เข้าสู่ระบบ (เพื่อส่งข้อมูลอนุกรรมการ ป.ป.ช.สพฐ.น้อย)
+                    <span>เข้าสู่ระบบ (เพื่อส่งข้อมูลอนุกรรมการ ป.ป.ช.สพฐ.น้อย)</span>
                 </button>
             </div>
             
@@ -606,7 +618,7 @@
                         สถานะการลงทะเบียนอนุกรรมการ
                     </h3>
                     <button class="btn btn-secondary" onclick="loadDashboardData()" style="padding: 6px 14px; font-size: 0.8rem;">
-                        <i class="fa-solid fa-rotate-right"></i> รีเฟรช
+                        <i class="fa-solid fa-arrows-rotate refresh-icon" id="refresh-icon"></i> รีเฟรช
                     </button>
                 </div>
 
@@ -655,6 +667,25 @@
                 <div style="margin-top: 15px;">
                     <button type="button" class="btn btn-secondary" style="width: 100%; font-size: 0.85rem;" onclick="closeLoginModal()">
                         ยกเลิก
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= Closed System Alert Modal ================= -->
+        <div id="closed-modal" class="modal-overlay">
+            <div class="login-card" style="border-top: 5px solid #e74c3c;">
+                <button type="button" class="modal-close-btn" onclick="closeClosedModal()"><i class="fa-solid fa-xmark"></i></button>
+                <div class="login-icon" style="background: #fde8e8; color: #e74c3c;">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <h3 style="color: #c0392b; font-size: 1.4rem;">ระบบปิดแล้ว</h3>
+                <p style="color: #444; font-size: 0.95rem; margin-top: 12px; line-height: 1.6; font-weight: 500;">
+                    "การตรงเวลา บ่งบอกถึงวินัย<br>(ตามหลักคุณลักษณะอันพึงประสงค์ ป.ป.ช.สพฐ.น้อย)"
+                </p>
+                <div style="margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="closeClosedModal()">
+                        รับทราบ
                     </button>
                 </div>
             </div>
@@ -735,6 +766,52 @@
         let currentStudentsList = [];
         let activeClassForRegis = '';
 
+        // --- Countdown & Deadline Config ---
+        // กำหนดวันปิดรับลงทะเบียน: 14 สิงหาคม 2569 เวลา 23:59:00 น. (ค.ศ. 2026)
+        const DEADLINE_DATE = new Date(2026, 7, 14, 23, 59, 0); 
+        let countdownTimer = null;
+
+        function checkIsClosed() {
+            return new Date() > DEADLINE_DATE;
+        }
+
+        function updateCountdownDisplay() {
+            const now = new Date();
+            const diff = DEADLINE_DATE - now;
+
+            const textElem = document.getElementById('countdown-text');
+            const badgeElem = document.getElementById('timer-badge');
+
+            if (diff <= 0) {
+                if (textElem) textElem.innerHTML = '<strong style="color: #e74c3c;">ปิดรับลงทะเบียนแล้ว</strong>';
+                if (badgeElem) badgeElem.style.borderColor = '#e74c3c';
+                return true; // Closed
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            let timeStr = 'เหลือเวลาลงทะเบียน: ';
+            if (days > 0) timeStr += `${days} วัน `;
+            timeStr += `${hours.toString().padStart(2, '0')} ชม. ${minutes.toString().padStart(2, '0')} นาที ${seconds.toString().padStart(2, '0')} วินาที`;
+
+            if (textElem) textElem.innerText = timeStr;
+            return false; // Open
+        }
+
+        function startCountdown() {
+            updateCountdownDisplay();
+            if (countdownTimer) clearInterval(countdownTimer);
+            countdownTimer = setInterval(updateCountdownDisplay, 1000);
+        }
+
+        function closeClosedModal() {
+            const modal = document.getElementById('closed-modal');
+            if (modal) modal.classList.remove('active');
+        }
+
         // --- View Navigation ---
         function showView(viewId) {
             document.querySelectorAll('.container > div').forEach(div => div.classList.remove('active-view'));
@@ -749,6 +826,13 @@
 
         // --- Login Modal Controls ---
         function openLoginModal() {
+            // ตรวจสอบว่าระบบปิดแล้วหรือยัง
+            if (checkIsClosed()) {
+                const closedModal = document.getElementById('closed-modal');
+                if (closedModal) closedModal.classList.add('active');
+                return;
+            }
+
             const modal = document.getElementById('login-modal');
             if (modal) {
                 modal.classList.add('active');
@@ -769,12 +853,16 @@
         // --- 1. Load Dashboard Data ---
         async function loadDashboardData() {
             const tbody = document.querySelector('#dashboard-table tbody');
+            const refreshIcon = document.getElementById('refresh-icon');
+            
+            if (refreshIcon) refreshIcon.classList.add('fa-spin');
             if (!tbody) return;
             
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888; padding:25px;">กำลังอัปเดตข้อมูลล่าสุด...</td></tr>';
 
             if (!supabaseClient) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#d9534f; padding:20px;">ไม่สามารถเชื่อมต่อ Supabase ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</td></tr>';
+                if (refreshIcon) refreshIcon.classList.remove('fa-spin');
                 return;
             }
 
@@ -816,12 +904,22 @@
             } catch (err) {
                 console.error("Dashboard Load Error:", err);
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#d9534f; padding:20px;">ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง</td></tr>';
+            } finally {
+                if (refreshIcon) refreshIcon.classList.remove('fa-spin');
             }
         }
 
         // --- 2. Login Logic ---
         async function handleLogin(event) {
             event.preventDefault();
+
+            if (checkIsClosed()) {
+                closeLoginModal();
+                const closedModal = document.getElementById('closed-modal');
+                if (closedModal) closedModal.classList.add('active');
+                return;
+            }
+
             const emailInput = document.getElementById('login-email').value.trim();
             const btnSubmit = document.getElementById('btn-login-submit');
 
@@ -1155,6 +1253,7 @@
 
         // --- Init App ---
         window.onload = function() {
+            startCountdown();
             showView('dashboard-view');
         };
     </script>
