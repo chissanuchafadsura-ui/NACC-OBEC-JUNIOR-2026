@@ -17,6 +17,8 @@
 
     <!-- Supabase JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SheetJS CDN for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
         :root {
@@ -190,6 +192,19 @@
         .btn-secondary:hover .refresh-icon {
             transform: rotate(180deg);
             transition: transform 0.4s ease;
+        }
+
+        .btn-excel {
+            background: #107c41;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(16, 124, 65, 0.2);
+        }
+
+        .btn-excel:hover {
+            background: #0b5c30;
+            color: #ffffff;
+            box-shadow: 0 6px 14px rgba(16, 124, 65, 0.3);
+            transform: translateY(-2px);
         }
 
         /* --- Modal Popup for Login --- */
@@ -612,14 +627,19 @@
             </div>
             
             <div class="panel">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <h3 style="margin:0; color: var(--purple-main); font-size: 1.1rem;">
                         <i class="fa-solid fa-list-check" style="color: var(--gold-main); margin-right: 6px;"></i> 
                         สถานะการลงทะเบียนอนุกรรมการ
                     </h3>
-                    <button class="btn btn-secondary" onclick="loadDashboardData()" style="padding: 6px 14px; font-size: 0.8rem;">
-                        <i class="fa-solid fa-arrows-rotate refresh-icon" id="refresh-icon"></i> รีเฟรช
-                    </button>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button class="btn btn-excel" onclick="exportToExcel()" style="padding: 6px 14px; font-size: 0.8rem;">
+                            <i class="fa-solid fa-file-excel"></i> ส่งออก Excel
+                        </button>
+                        <button class="btn btn-secondary" onclick="loadDashboardData()" style="padding: 6px 14px; font-size: 0.8rem;">
+                            <i class="fa-solid fa-arrows-rotate refresh-icon" id="refresh-icon"></i> รีเฟรช
+                        </button>
+                    </div>
                 </div>
 
                 <div class="table-responsive">
@@ -767,8 +787,8 @@
         let activeClassForRegis = '';
 
         // --- Countdown & Deadline Config ---
-        // กำหนดวันปิดรับลงทะเบียน: 17 สิงหาคม 2569 เวลา 23:59:00 น. (ค.ศ. 2026)
-        const DEADLINE_DATE = new Date(2026, 7, 17, 23, 59, 0); 
+        // กำหนดวันปิดรับลงทะเบียน: 14 สิงหาคม 2569 เวลา 23:59:00 น. (ค.ศ. 2026)
+        const DEADLINE_DATE = new Date(2026, 7, 14, 23, 59, 0); 
         let countdownTimer = null;
 
         function checkIsClosed() {
@@ -810,6 +830,63 @@
         function closeClosedModal() {
             const modal = document.getElementById('closed-modal');
             if (modal) modal.classList.remove('active');
+        }
+
+        // --- Export to Excel Function ---
+        function exportToExcel() {
+            const table = document.getElementById('dashboard-table');
+            if (!table) return;
+
+            const rows = table.querySelectorAll('tbody tr');
+            if (rows.length === 0 || rows[0].innerText.includes('กำลัง') || rows[0].innerText.includes('ยังไม่มี') || rows[0].innerText.includes('ไม่สามารถ')) {
+                alert('ไม่มีข้อมูลสำหรับส่งออก Excel');
+                return;
+            }
+
+            if (typeof XLSX === 'undefined') {
+                alert('ระบบไลบรารี Excel ยังไม่พร้อมใช้งาน กรุณาลองใหม่อีกครั้ง');
+                return;
+            }
+
+            const excelData = [];
+            excelData.push(['ระดับชั้น', 'เลขที่', 'รหัสนักเรียน', 'ชื่อ - สกุล นักเรียน', 'ผู้ส่งข้อมูล']);
+
+            rows.forEach(tr => {
+                const cols = tr.querySelectorAll('td');
+                if (cols.length === 5) {
+                    excelData.push([
+                        cols[0].innerText.trim(),
+                        cols[1].innerText.trim(),
+                        cols[2].innerText.trim(),
+                        cols[3].innerText.trim(),
+                        cols[4].innerText.trim()
+                    ]);
+                }
+            });
+
+            // Create worksheet
+            const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+            // Auto Column Widths
+            const colWidths = excelData[0].map((_, colIndex) => {
+                let maxLen = 10;
+                excelData.forEach(row => {
+                    const cellVal = row[colIndex] ? row[colIndex].toString() : '';
+                    if (cellVal.length > maxLen) maxLen = cellVal.length;
+                });
+                return { wch: Math.min(maxLen + 8, 40) };
+            });
+            ws['!cols'] = colWidths;
+
+            // Create workbook and download
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "รายชื่ออนุกรรมการ");
+
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2,'0')}-${today.getDate().toString().padStart(2,'0')}`;
+            const fileName = `รายชื่ออนุกรรมการ_ปปช_สพฐ_น้อย_${dateStr}.xlsx`;
+
+            XLSX.writeFile(wb, fileName);
         }
 
         // --- View Navigation ---
