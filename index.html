@@ -628,10 +628,17 @@
             
             <div class="panel">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                    <h3 style="margin:0; color: var(--purple-main); font-size: 1.1rem;">
-                        <i class="fa-solid fa-list-check" style="color: var(--gold-main); margin-right: 6px;"></i> 
-                        สถานะการลงทะเบียนอนุกรรมการ
-                    </h3>
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <h3 style="margin:0; color: var(--purple-main); font-size: 1.1rem;">
+                            <i class="fa-solid fa-list-check" style="color: var(--gold-main); margin-right: 6px;"></i> 
+                            สถานะการลงทะเบียนอนุกรรมการ
+                        </h3>
+                        <!-- ตัวกรองสถานะการลงทะเบียน -->
+                        <select id="dashboard-filter-status" onchange="renderDashboardByFilter()" style="padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--purple-main); background: white; color: var(--purple-main); font-weight: 500; font-size: 0.85rem; cursor: pointer; outline: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+                            <option value="registered">🟢 รายชื่อที่ลงทะเบียนแล้ว</option>
+                            <option value="unregistered">🔴 ระดับชั้นที่ยังไม่ลงทะเบียน</option>
+                        </select>
+                    </div>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                         <button class="btn btn-excel" onclick="exportToExcel()" style="padding: 6px 14px; font-size: 0.8rem;">
                             <i class="fa-solid fa-file-excel"></i> ส่งออก Excel
@@ -639,6 +646,16 @@
                         <button class="btn btn-secondary" onclick="loadDashboardData()" style="padding: 6px 14px; font-size: 0.8rem;">
                             <i class="fa-solid fa-arrows-rotate refresh-icon" id="refresh-icon"></i> รีเฟรช
                         </button>
+                    </div>
+                </div>
+
+                <!-- Summary Badges Bar -->
+                <div id="status-summary-bar" style="display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap;">
+                    <div style="background: #f0fbf4; border: 1px solid #b7ebc6; padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; color: #1e7e34; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-circle-check"></i> ลงทะเบียนแล้ว: <strong id="count-registered" style="font-size: 1rem;">0</strong> ห้อง
+                    </div>
+                    <div style="background: #fff5f5; border: 1px solid #ffc9c9; padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; color: #c0392b; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-circle-xmark"></i> ยังไม่ลงทะเบียน: <strong id="count-unregistered" style="font-size: 1rem;">0</strong> ห้อง
                     </div>
                 </div>
 
@@ -786,6 +803,10 @@
         let currentStudentsList = [];
         let activeClassForRegis = '';
 
+        // Global Dashboard Caches
+        let cachedRegisData = [];
+        let cachedUnregisteredClasses = [];
+
         // --- Countdown & Deadline Config ---
         // กำหนดวันปิดรับลงทะเบียน: 22 สิงหาคม 2569 เวลา 23:59:00 น. (ค.ศ. 2026)
         const DEADLINE_DATE = new Date(2026, 7, 22, 23, 59, 0); 
@@ -838,7 +859,7 @@
             if (!table) return;
 
             const rows = table.querySelectorAll('tbody tr');
-            if (rows.length === 0 || rows[0].innerText.includes('กำลัง') || rows[0].innerText.includes('ยังไม่มี') || rows[0].innerText.includes('ไม่สามารถ')) {
+            if (rows.length === 0 || rows[0].innerText.includes('กำลัง') || rows[0].innerText.includes('ยังไม่มี') || rows[0].innerText.includes('ไม่สามารถ') || rows[0].innerText.includes('ครบทุกระดับชั้นแล้ว')) {
                 alert('ไม่มีข้อมูลสำหรับส่งออก Excel');
                 return;
             }
@@ -849,18 +870,17 @@
             }
 
             const excelData = [];
-            excelData.push(['ระดับชั้น', 'เลขที่', 'รหัสนักเรียน', 'ชื่อ - สกุล นักเรียน', 'ผู้ส่งข้อมูล']);
+
+            // Dynamic Header from Table
+            const headerCols = table.querySelectorAll('thead tr th');
+            const headers = Array.from(headerCols).map(th => th.innerText.trim());
+            excelData.push(headers);
 
             rows.forEach(tr => {
                 const cols = tr.querySelectorAll('td');
-                if (cols.length === 5) {
-                    excelData.push([
-                        cols[0].innerText.trim(),
-                        cols[1].innerText.trim(),
-                        cols[2].innerText.trim(),
-                        cols[3].innerText.trim(),
-                        cols[4].innerText.trim()
-                    ]);
+                if (cols.length === headers.length) {
+                    const rowVals = Array.from(cols).map(td => td.innerText.trim());
+                    excelData.push(rowVals);
                 }
             });
 
@@ -880,11 +900,16 @@
 
             // Create workbook and download
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "รายชื่ออนุกรรมการ");
+            const filterSelect = document.getElementById('dashboard-filter-status');
+            const isUnregistered = filterSelect && filterSelect.value === 'unregistered';
+            const sheetName = isUnregistered ? "ระดับชั้นที่ยังไม่ลงทะเบียน" : "รายชื่ออนุกรรมการ";
+            
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
             const today = new Date();
             const dateStr = `${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2,'0')}-${today.getDate().toString().padStart(2,'0')}`;
-            const fileName = `รายชื่ออนุกรรมการ_ปปช_สพฐ_น้อย_${dateStr}.xlsx`;
+            const filePrefix = isUnregistered ? "ระดับชั้นยังไม่ลงทะเบียน" : "รายชื่ออนุกรรมการ_ปปช_สพฐ_น้อย";
+            const fileName = `${filePrefix}_${dateStr}.xlsx`;
 
             XLSX.writeFile(wb, fileName);
         }
@@ -927,7 +952,7 @@
             }
         }
 
-        // --- 1. Load Dashboard Data ---
+        // --- 1. Load Dashboard Data & Compare Registered vs Unregistered ---
         async function loadDashboardData() {
             const tbody = document.querySelector('#dashboard-table tbody');
             const refreshIcon = document.getElementById('refresh-icon');
@@ -944,30 +969,98 @@
             }
 
             try {
-                const { data, error } = await supabaseClient
+                // Fetch registered data
+                const { data: regisData, error: regisError } = await supabaseClient
                     .from('regis')
                     .select('*');
 
-                if (error) throw error;
+                if (regisError) throw regisError;
 
-                // Sort JS side for reliable sorting
-                if (data && data.length > 0) {
-                    data.sort((a, b) => {
-                        if (a['Class'] !== b['Class']) {
-                            return (a['Class'] || '').localeCompare(b['Class'] || '', 'th');
+                // Fetch login accounts to match class & teacher names
+                const { data: loginData, error: loginError } = await supabaseClient
+                    .from('login')
+                    .select('*');
+
+                if (loginError) console.warn("Cannot load login list:", loginError);
+
+                cachedRegisData = regisData || [];
+
+                // Registered Classes Set
+                const registeredClassSet = new Set(cachedRegisData.map(r => (r['Class'] || '').trim()).filter(Boolean));
+
+                // Find Unregistered Classes
+                cachedUnregisteredClasses = [];
+                if (loginData && loginData.length > 0) {
+                    loginData.forEach(user => {
+                        const className = (user['Class'] || user['class'] || '').trim();
+                        const teacherName = (user['Name'] || user['name'] || '-').trim();
+
+                        // Exclude admin or empty class
+                        if (className && className !== 'ป.ป.ช.สพฐ.น้อย' && !registeredClassSet.has(className)) {
+                            if (!cachedUnregisteredClasses.some(item => item.className === className)) {
+                                cachedUnregisteredClasses.push({
+                                    className: className,
+                                    teacherName: teacherName
+                                });
+                            }
                         }
-                        return (parseInt(a['No.']) || 0) - (parseInt(b['No.']) || 0);
                     });
                 }
 
-                tbody.innerHTML = '';
+                // Sort Unregistered classes
+                cachedUnregisteredClasses.sort((a, b) => a.className.localeCompare(b.className, 'th'));
 
-                if (!data || data.length === 0) {
+                // Update summary counters
+                const regCountElem = document.getElementById('count-registered');
+                const unregCountElem = document.getElementById('count-unregistered');
+                if (regCountElem) regCountElem.innerText = registeredClassSet.size;
+                if (unregCountElem) unregCountElem.innerText = cachedUnregisteredClasses.length;
+
+                renderDashboardByFilter();
+
+            } catch (err) {
+                console.error("Dashboard Load Error:", err);
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#d9534f; padding:20px;">ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง</td></tr>';
+            } finally {
+                if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+            }
+        }
+
+        // --- Render Dashboard Table Based on Selected Filter ---
+        function renderDashboardByFilter() {
+            const filterSelect = document.getElementById('dashboard-filter-status');
+            const filterValue = filterSelect ? filterSelect.value : 'registered';
+            const thead = document.querySelector('#dashboard-table thead');
+            const tbody = document.querySelector('#dashboard-table tbody');
+
+            if (!tbody || !thead) return;
+
+            if (filterValue === 'registered') {
+                // Render Registered View
+                thead.innerHTML = `
+                    <tr>
+                        <th>ระดับชั้น</th>
+                        <th>เลขที่</th>
+                        <th>รหัสนักเรียน</th>
+                        <th>ชื่อ - สกุล นักเรียน</th>
+                        <th>ผู้ส่งข้อมูล</th>
+                    </tr>
+                `;
+
+                if (cachedRegisData.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999; padding: 30px;">ยังไม่มีข้อมูลการลงทะเบียนในระบบ</td></tr>';
                     return;
                 }
 
-                data.forEach(row => {
+                const sortedData = [...cachedRegisData].sort((a, b) => {
+                    if (a['Class'] !== b['Class']) {
+                        return (a['Class'] || '').localeCompare(b['Class'] || '', 'th');
+                    }
+                    return (parseInt(a['No.']) || 0) - (parseInt(b['No.']) || 0);
+                });
+
+                tbody.innerHTML = '';
+                sortedData.forEach(row => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td><span class="class-badge">${row['Class'] || '-'}</span></td>
@@ -978,11 +1071,32 @@
                     `;
                     tbody.appendChild(tr);
                 });
-            } catch (err) {
-                console.error("Dashboard Load Error:", err);
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#d9534f; padding:20px;">ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง</td></tr>';
-            } finally {
-                if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+
+            } else if (filterValue === 'unregistered') {
+                // Render Unregistered View
+                thead.innerHTML = `
+                    <tr>
+                        <th>ระดับชั้น</th>
+                        <th>สถานะการลงทะเบียน</th>
+                        <th>ครูที่ปรึกษา / ผู้รับผิดชอบส่งข้อมูล</th>
+                    </tr>
+                `;
+
+                if (cachedUnregisteredClasses.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#27ae60; padding: 30px; font-weight:500;"><i class="fa-solid fa-circle-check"></i> ครบทุกระดับชั้นแล้ว! ไม่มีห้องค้างลงทะเบียน</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                cachedUnregisteredClasses.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><span class="class-badge" style="background: #fde8e8; color: #c0392b;">${item.className}</span></td>
+                        <td><span style="color: #e74c3c; font-weight: 500;"><i class="fa-solid fa-circle-xmark"></i> ยังไม่ลงทะเบียน</span></td>
+                        <td><span class="teacher-tag" style="color: #333; font-weight: 500; font-size: 0.9rem;"><i class="fa-solid fa-chalkboard-user" style="color: var(--purple-main); margin-right: 6px;"></i> ${item.teacherName}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
             }
         }
 
