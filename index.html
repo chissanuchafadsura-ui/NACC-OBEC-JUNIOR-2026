@@ -988,24 +988,32 @@
                 // Registered Classes Set
                 const registeredClassSet = new Set(cachedRegisData.map(r => (r['Class'] || '').trim()).filter(Boolean));
 
-                // Find Unregistered Classes
-                cachedUnregisteredClasses = [];
+                // Find Unregistered Classes and group all advisor teachers
+                const unregisteredClassMap = new Map();
                 if (loginData && loginData.length > 0) {
                     loginData.forEach(user => {
                         const className = (user['Class'] || user['class'] || '').trim();
-                        const teacherName = (user['Name'] || user['name'] || '-').trim();
+                        const teacherName = (user['Name'] || user['name'] || '').trim();
 
                         // Exclude admin or empty class
                         if (className && className !== 'ป.ป.ช.สพฐ.น้อย' && !registeredClassSet.has(className)) {
-                            if (!cachedUnregisteredClasses.some(item => item.className === className)) {
-                                cachedUnregisteredClasses.push({
-                                    className: className,
-                                    teacherName: teacherName
-                                });
+                            if (!unregisteredClassMap.has(className)) {
+                                unregisteredClassMap.set(className, []);
+                            }
+                            if (teacherName && teacherName !== '-') {
+                                const list = unregisteredClassMap.get(className);
+                                if (!list.includes(teacherName)) {
+                                    list.push(teacherName);
+                                }
                             }
                         }
                     });
                 }
+
+                cachedUnregisteredClasses = Array.from(unregisteredClassMap.entries()).map(([className, teachers]) => ({
+                    className: className,
+                    teacherName: teachers.length > 0 ? teachers.join(' / ') : '-'
+                }));
 
                 // Sort Unregistered classes
                 cachedUnregisteredClasses.sort((a, b) => a.className.localeCompare(b.className, 'th'));
